@@ -296,4 +296,8 @@ class Handler(SimpleHTTPRequestHandler):
         finally: c.close()
 
 if __name__=='__main__':
-    init_db(); print('CSD Attendance running at http://localhost:8000'); ThreadingHTTPServer(('0.0.0.0',8000),Handler).serve_forever()
+   import os
+init_db()
+port = int(os.environ.get("PORT", 8000))
+print(f"CSD Attendance running on port {port}")
+ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
