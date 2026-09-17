@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSD Attendance | Data Science</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <!-- LOGIN -->
+  <section id="loginPage" class="login-page">
+    <div class="login-art">
+      <div class="art-topbar">
+        <div class="brand-mini"><span class="brand-mark">◆</span> CSD <b>Attendance</b></div>
+        <div class="art-badge">Data Science</div>
+      </div>
+      <div class="art-content">
+        <div class="art-copy">
+          <span class="eyebrow">SMART ACADEMIC SYSTEM</span>
+          <h1>Data-driven<br><span>attendance.</span></h1>
+          <p>One clean workspace for faculty attendance, timetables, student percentages and academic insights.</p>
+          <div class="mini-stats">
+            <div><strong>4</strong><span>Years</span></div>
+            <div><strong>8</strong><span>Periods</span></div>
+            <div><strong>24/7</strong><span>Access</span></div>
+          </div>
+        </div>
+        <img class="ds-photo" src="data-science.svg" alt="Data Science themed illustration">
+      </div>
+      <div class="art-footer">CSD • Computer Science & Data Science</div>
+    </div>
+
+    <div class="login-panel">
+      <div class="login-controls">
+        <button class="theme-control" id="loginTheme" title="Toggle theme"><span>☾</span> <b>LIGHT / DARK</b></button>
+        <select id="languageSelect" aria-label="Language">
+          <option>ENGLISH</option>
+          <option disabled>తెలుగు (Coming soon)</option>
+        </select>
+      </div>
+
+      <div class="login-box">
+        <div class="login-logo"><span>◆</span></div>
+        <span class="eyebrow">FACULTY PORTAL</span>
+        <h2><strong>LOGIN</strong></h2>
+        <p>Sign in to manage CSD student attendance.</p>
+
+        <form id="loginForm">
+          <label>Username</label>
+          <div class="input-wrap">
+            <span>◎</span>
+            <input id="username" type="text" placeholder="Enter username" autocomplete="username" required>
+          </div>
+
+          <label>Password</label>
+          <div class="input-wrap">
+            <span>⌁</span>
+            <input id="password" type="password" placeholder="Enter password" autocomplete="current-password" required>
+            <button type="button" class="eye-btn" id="showPassword">◉</button>
+          </div>
+
+          <div class="login-row">
+            <label class="remember"><input type="checkbox" checked> <span>Remember me</span></label>
+            <span class="secure">● Secure faculty access</span>
+          </div>
+
+          <button class="primary-btn login-btn" type="submit">LOGIN TO DASHBOARD <span>→</span></button>
+        </form>
+      </div>
+      <div class="login-bottom">© 2026 CSD Attendance • Faculty access only</div>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <section id="appPage" class="app-page hidden">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="brand-icon">◆</div>
+        <div><strong>CSD</strong><span>Attendance</span></div>
+      </div>
+      <div class="faculty-chip"><div class="avatar">DS</div><div><b>DATA SCIENCE</b><span>Faculty</span></div><span class="online"></span></div>
+
+      <nav>
+        <button class="nav-item active" data-action="home"><span>⌂</span> Dashboard</button>
+        <button class="nav-item" data-action="timetable"><span>▦</span> Time Table</button>
+        <button class="nav-item" data-action="attendance"><span>✓</span> Period Attendance</button>
+        <button class="nav-item" data-action="students"><span>♟</span> Student List</button>
+        <button class="nav-item" data-action="history"><span>◷</span> Attendance History</button>
+        <button class="nav-item" data-action="reports"><span>▥</span> Reports</button>
+      </nav>
+
+      <div class="side-insight">
+        <div class="spark">⌁</div>
+        <b>Smart Insights</b>
+        <p>Quick view of attendance performance.</p>
+        <button data-action="reports">View Reports →</button>
+      </div>
+      <button class="logout" id="logoutBtn">↪ <span>Logout</span></button>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu">☰</button>
+        <div>
+          <div class="crumb">Faculty Portal <span>›</span> <b id="pageCrumb">Dashboard</b></div>
+          <h1 id="pageTitle">CSD Attendance</h1>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn" id="appTheme" title="Toggle theme">☾</button>
+          <button class="icon-btn notification" title="Notifications">♧<i>3</i></button>
+          <div class="profile"><div class="avatar">DS</div><div><b>DATA SCIENCE</b><span>Faculty</span></div><span>⌄</span></div>
+        </div>
+      </header>
+
+      <div id="content"></div>
+    </main>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

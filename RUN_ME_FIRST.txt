@@ -1,0 +1,14 @@
+CSD ATTENDANCE PORTAL - EASY START
+
+1. Extract the ZIP completely.
+2. Double-click START.bat.
+3. Wait 2-3 seconds. Chrome/Edge should open automatically.
+4. If it does not open, manually visit: http://localhost:8000
+5. Login:
+   Username: DATA SCIENCE
+   Password: Admin123@321
+
+IMPORTANT:
+- Do not double-click index.html.
+- Keep the server window running while using the website.
+- If Windows says Python is missing, install Python 3 and enable "Add Python to PATH".

@@ -1,0 +1,18 @@
+CSD ATTENDANCE PORTAL — REAL DATA IMPORT
+
+Imported department student lists:
+- 2nd Year A: 65 students
+- 2nd Year B: 62 students
+- 3rd Year A: 73 students
+- 3rd Year B: 66 students
+- 4th Year A: 60 students
+- 4th Year B: same 60 students as the supplied 4th Year A&B list
+
+Total real student records added for Years 2-4: 386.
+
+Data-quality handling:
+- Two 2nd Year A students have no phone number in the supplied source.
+- Three supplied 3rd Year phone entries are not valid 10-digit numbers (one is 0 and two are 9 digits). They are not guessed or fabricated; the portal marks them for verification and disables the Call action until corrected.
+- Two obvious roll-number OCR/format issues were normalized from the supplied table sequence/image: 25X14A4496 -> 25X41A4496 and 25X41A44CO -> 25X41A44C0.
+
+1st Year demo data already present in the project was left unchanged because no 1st Year source list was supplied in this update.
