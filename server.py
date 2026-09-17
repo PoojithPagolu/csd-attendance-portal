@@ -555,11 +555,7 @@ def init_db():
         except sqlite3.OperationalError: pass
     pw=hashlib.sha256('Admin123@321'.encode()).hexdigest()
     c.execute('INSERT OR IGNORE INTO users(username,password_hash,display_name) VALUES(?,?,?)',('DATA SCIENCE',pw,'Data Science Faculty'))
-    # Keep the small Year-1 demo list, and load the supplied Years 2-4 lists.
-    for year in (1,):
-        for section in ('A','B'):
-            for roll,name in SEED_STUDENTS:
-                c.execute('INSERT OR IGNORE INTO students(roll_no,name,year,section) VALUES(?,?,?,?)',(roll,name,year,section))
+    # Load the supplied Years 2-4 student lists.
     for (year, section), roster in STUDENT_DATA.items():
         for roll, name in roster:
             c.execute(
