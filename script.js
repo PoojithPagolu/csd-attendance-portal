@@ -1,3 +1,77 @@
+/* =========================================================
+   LIVE VIJAYAWADA / IST DATE & TIME
+   ========================================================= */
+
+function getIndiaTime() {
+  const now = new Date();
+
+  const time = new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  }).format(now);
+
+  const date = new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  }).format(now);
+
+  const isoDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(now);
+
+  return {
+    time: time,
+    date: date,
+    isoDate: isoDate
+  };
+}
+
+
+function updateLiveClock() {
+
+  const india = getIndiaTime();
+
+  /* Login clock */
+  const loginTime = document.getElementById("loginTime");
+  const loginDate = document.getElementById("loginDate");
+
+  if (loginTime) {
+    loginTime.textContent = india.time;
+  }
+
+  if (loginDate) {
+    loginDate.textContent = india.date;
+  }
+
+
+  /* Main application clock */
+  const appTime = document.getElementById("appTime");
+  const appDate = document.getElementById("appDate");
+
+  if (appTime) {
+    appTime.textContent = india.time;
+  }
+
+  if (appDate) {
+    appDate.textContent = india.date;
+  }
+}
+
+
+/* Start immediately */
+updateLiveClock();
+
+/* Update every second */
+setInterval(updateLiveClock, 1000);
 const YEARS = [
   {id:1, name:"1st Year", color:"#22d3ee", subtitle:"Foundation & Core", sections:["A","B"]},
   {id:2, name:"2nd Year", color:"#ec4899", subtitle:"Intermediate Level", sections:["A","B"]},
