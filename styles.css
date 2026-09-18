@@ -130,3 +130,125 @@ body.light .year-sections span{color:var(--accent)}
 .tool-btn:disabled,.search:disabled{opacity:.45;cursor:not-allowed}.check-btn:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:1100px){.timetable-week{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.timetable-week{grid-template-columns:1fr}.live-session-card{display:block}.session-status{display:inline-block;margin-top:12px}.tt-day{min-width:0}}
+/* =========================================================
+   LIVE VIJAYAWADA DATE & TIME
+   CSD ATTENDANCE PORTAL
+   ========================================================= */
+
+.live-clock {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 205px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--panel2);
+  line-height: 1.15;
+  box-shadow: 0 8px 25px rgba(0,0,0,.12);
+}
+
+.live-clock .clock-live {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  color: var(--green);
+  margin-bottom: 3px;
+}
+
+.live-clock .clock-live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 9px var(--green);
+  animation: clockPulse 1.5s infinite;
+}
+
+.live-clock strong {
+  font-size: 17px;
+  letter-spacing: .8px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.live-clock span:not(.clock-live) {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.live-clock small {
+  font-size: 8px;
+  color: var(--cyan);
+  letter-spacing: .5px;
+  margin-top: 3px;
+}
+
+.app-clock {
+  min-width: 185px;
+  padding: 7px 12px;
+}
+
+.app-clock strong {
+  font-size: 15px;
+}
+
+.app-clock small {
+  font-size: 7px;
+}
+
+@keyframes clockPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: .35;
+    transform: scale(.75);
+  }
+}
+
+/* Login page */
+.login-controls {
+  align-items: center;
+}
+
+.login-controls .live-clock {
+  margin-right: auto;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+
+  .login-controls {
+    flex-wrap: wrap;
+  }
+
+  .login-controls .live-clock {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .app-clock {
+    min-width: 155px;
+    padding: 6px 9px;
+  }
+
+  .app-clock strong {
+    font-size: 13px;
+  }
+
+  .app-clock span:not(.clock-live) {
+    font-size: 8px;
+  }
+
+  .app-clock small {
+    display: none;
+  }
+
+}
