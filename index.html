@@ -16,38 +16,59 @@
         <div class="brand-mini"><span class="brand-mark">◆</span> CSD <b>Attendance</b></div>
         <div class="art-badge">Data Science</div>
       </div>
+
       <div class="art-content">
         <div class="art-copy">
           <span class="eyebrow">SMART ACADEMIC SYSTEM</span>
           <h1>Data-driven<br><span>attendance.</span></h1>
           <p>One clean workspace for faculty attendance, timetables, student percentages and academic insights.</p>
+
           <div class="mini-stats">
             <div><strong>4</strong><span>Years</span></div>
             <div><strong>8</strong><span>Periods</span></div>
             <div><strong>24/7</strong><span>Access</span></div>
           </div>
         </div>
-        <img class="ds-photo" src="data-science.svg" alt="Data Science themed illustration">
+
+        <img class="ds-photo" src="data-science.svg" alt="Data Science Illustration">
       </div>
+
       <div class="art-footer">CSD • Computer Science & Data Science</div>
     </div>
 
+    <!-- LOGIN PANEL -->
     <div class="login-panel">
+
       <div class="login-controls">
-        <button class="theme-control" id="loginTheme" title="Toggle theme"><span>☾</span> <b>LIGHT / DARK</b></button>
+
+        <!-- LIVE VIJAYAWADA CLOCK -->
+        <div class="live-clock" id="loginClock">
+          <span class="clock-live"><i></i> LIVE</span>
+          <strong id="loginTime">00:00:00 AM</strong>
+          <span id="loginDate">Loading...</span>
+          <small>Vijayawada • IST</small>
+        </div>
+
+        <button class="theme-control" id="loginTheme" title="Toggle theme">
+          <span>☾</span> <b>LIGHT / DARK</b>
+        </button>
+
         <select id="languageSelect" aria-label="Language">
           <option>ENGLISH</option>
           <option disabled>తెలుగు (Coming soon)</option>
         </select>
+
       </div>
 
       <div class="login-box">
         <div class="login-logo"><span>◆</span></div>
+
         <span class="eyebrow">FACULTY PORTAL</span>
         <h2><strong>LOGIN</strong></h2>
         <p>Sign in to manage CSD student attendance.</p>
 
         <form id="loginForm">
+
           <label>Username</label>
           <div class="input-wrap">
             <span>◎</span>
@@ -62,25 +83,49 @@
           </div>
 
           <div class="login-row">
-            <label class="remember"><input type="checkbox" checked> <span>Remember me</span></label>
+            <label class="remember">
+              <input type="checkbox" checked>
+              <span>Remember me</span>
+            </label>
             <span class="secure">● Secure faculty access</span>
           </div>
 
-          <button class="primary-btn login-btn" type="submit">LOGIN TO DASHBOARD <span>→</span></button>
+          <button class="primary-btn login-btn" type="submit">
+            LOGIN TO DASHBOARD <span>→</span>
+          </button>
+
         </form>
       </div>
-      <div class="login-bottom">© 2026 CSD Attendance • Faculty access only</div>
+
+      <div class="login-bottom">
+        © 2026 CSD Attendance • Faculty access only
+      </div>
+
     </div>
   </section>
 
-  <!-- APP -->
+
+  <!-- MAIN APPLICATION -->
   <section id="appPage" class="app-page hidden">
+
     <aside class="sidebar">
+
       <div class="side-brand">
         <div class="brand-icon">◆</div>
-        <div><strong>CSD</strong><span>Attendance</span></div>
+        <div>
+          <strong>CSD</strong>
+          <span>Attendance</span>
+        </div>
       </div>
-      <div class="faculty-chip"><div class="avatar">DS</div><div><b>DATA SCIENCE</b><span>Faculty</span></div><span class="online"></span></div>
+
+      <div class="faculty-chip">
+        <div class="avatar">DS</div>
+        <div>
+          <b>DATA SCIENCE</b>
+          <span>Faculty</span>
+        </div>
+        <span class="online"></span>
+      </div>
 
       <nav>
         <button class="nav-item active" data-action="home"><span>⌂</span> Dashboard</button>
@@ -97,25 +142,60 @@
         <p>Quick view of attendance performance.</p>
         <button data-action="reports">View Reports →</button>
       </div>
+
       <button class="logout" id="logoutBtn">↪ <span>Logout</span></button>
+
     </aside>
 
+
     <main class="main-area">
+
       <header class="topbar">
+
         <button class="mobile-menu" id="mobileMenu">☰</button>
+
         <div>
-          <div class="crumb">Faculty Portal <span>›</span> <b id="pageCrumb">Dashboard</b></div>
+          <div class="crumb">
+            Faculty Portal <span>›</span>
+            <b id="pageCrumb">Dashboard</b>
+          </div>
           <h1 id="pageTitle">CSD Attendance</h1>
         </div>
+
+
         <div class="top-actions">
+
+          <!-- LIVE HEADER CLOCK -->
+          <div class="live-clock app-clock" id="appClock">
+            <span class="clock-live"><i></i> LIVE</span>
+            <strong id="appTime">00:00:00 AM</strong>
+            <span id="appDate">Loading...</span>
+            <small>Vijayawada • IST</small>
+          </div>
+
           <button class="icon-btn" id="appTheme" title="Toggle theme">☾</button>
-          <button class="icon-btn notification" title="Notifications">♧<i>3</i></button>
-          <div class="profile"><div class="avatar">DS</div><div><b>DATA SCIENCE</b><span>Faculty</span></div><span>⌄</span></div>
+
+          <button class="icon-btn notification" title="Notifications">
+            ♧<i>3</i>
+          </button>
+
+          <div class="profile">
+            <div class="avatar">DS</div>
+            <div>
+              <b>DATA SCIENCE</b>
+              <span>Faculty</span>
+            </div>
+            <span>⌄</span>
+          </div>
+
         </div>
+
       </header>
 
       <div id="content"></div>
+
     </main>
+
   </section>
 
   <script src="script.js"></script>
