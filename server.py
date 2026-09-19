@@ -2,12 +2,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import sqlite3, json, os, hashlib, hmac
 from datetime import datetime, date
-from zoneinfo import ZoneInfo
 
-INDIA_TZ = ZoneInfo("Asia/Kolkata")
-
-def india_now():
-    return datetime.now(INDIA_TZ)
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(ROOT, 'attendance.db')
 
@@ -288,128 +283,152 @@ STUDENT_DATA = {
     ('25X45A4416', 'K.Kiran'),
 ],
     (4, 'A'): [
-    ('23X41A4401', 'Aadirala Shirisha'),
-    ('23X41A4402', 'Ariveni Hema Sri'),
-    ('23X41A4403', 'Arja Jyothi Sri'),
-    ('23X41A4404', 'A. Varshitha Lakshmi Durga'),
-    ('23X41A4405', 'Bachhala Venkata Sri Krishna'),
-    ('23X41A4406', 'Baddapu Sai Krishna'),
-    ('23X41A4407', 'Banavathu Rishi Naik'),
-    ('23X41A4409', 'Betala Kinnera'),
-    ('23X41A4410', 'Bezawada Anusha'),
-    ('23X41A4411', 'Bezawada Jahnavi'),
-    ('23X41A4412', 'Challa Gayathri Sukanya'),
-    ('23X41A4414', 'Chandu Venkata Navya'),
-    ('23X41A4416', 'Devarla Ramya Sri'),
-    ('23X41A4417', 'Done Meghanadh'),
-    ('23X41A4419', 'Duvvada Yashwanth Damodar'),
-    ('23X41A4420', 'Duvvapu Madhavi'),
-    ('23X41A4421', 'Ganta Pavan'),
-    ('23X41A4422', 'Goriparti Naga Prasanna'),
-    ('23X41A4423', 'Guggilla Naga Ambika'),
-    ('23X41A4424', 'Guntaka Bhavya Spurthi'),
-    ('23X41A4425', 'Gurram Sandeep'),
-    ('23X41A4426', 'Jangam Mithil'),
-    ('23X41A4427', 'Jelli Kranthi Swarupa'),
-    ('23X41A4428', 'Jujjavarapu Iswarya'),
-    ('23X41A4429', 'Karlakunta Subba Rao'),
-    ('23X41A4430', 'Karri Naga Mahith Kumar'),
-    ('23X41A4432', 'Kodhati Sri Lalitha'),
-    ('23X41A4433', 'K. Harshitha Chowdary'),
-    ('23X41A4434', 'Kothapalli Komali'),
-    ('23X41A4435', 'M. L. Venkata Sai Lakshmi'),
-    ('23X41A4437', 'Md Shaziya Tarannum'),
-    ('23X41A4438', 'Miriyala Bala Swaritha'),
-    ('23X41A4439', 'Mohammed Mustafa'),
-    ('23X41A4441', 'M Bayazeed Babu'),
-    ('23X41A4442', 'Nandyala Iswarya'),
-    ('23X41A4444', 'Rajavarapu Nandini Devi'),
-    ('23X41A4445', 'R. Chaitanya Lakshmi'),
-    ('23X41A4446', 'Sambangi Poornima'),
-    ('23X41A4447', 'Sambravu Abhiram'),
-    ('23X41A4448', 'Seelam Sneha'),
-    ('23X41A4450', 'Shaik Nowshiya'),
-    ('23X41A4451', 'Shaik Saleem'),
-    ('23X41A4452', 'Shaik Zakeer Hussain'),
-    ('23X41A4453', 'Srinancharaiah Naidu G'),
-    ('23X41A4454', 'Sunkara Venkata Renu Gopal'),
-    ('23X41A4455', 'Surapaneni Aasritha'),
-    ('23X41A4456', 'Suriboina Venkata Mokshagna'),
-    ('23X41A4457', 'Syed Sahil Samad'),
-    ('23X41A4459', 'T. Jahanavi'),
-    ('23X41A4460', 'Tatikayala Maharshi'),
-    ('23X41A4461', 'Thota Leela Vardhan'),
-    ('23X41A4462', 'Tiruvayepati Harshi'),
-    ('23X41A4464', 'Vemuri Gopi'),
-    ('23X41A4465', 'Vinukonda Haseena'),
-    ('23X41A4466', 'Yarroju Susritha'),
-    ('24X45A4401', 'Basireddy Aswini'),
-    ('24X45A4402', 'Damerla Sai Geethika'),
-    ('24X45A4403', 'Kavuri Rakesh'),
-    ('24X45A4404', 'Kota Sridhar'),
-    ('24X45A4406', 'Nunna Venkata Sai Manikanta'),
+    ('23X41A4401', 'ADIRALA SHIRISHA'),
+    ('23X41A4402', 'ARIVENI HEMASRI'),
+    ('23X41A4403', 'ARJA JYOTHI SRI'),
+    ('23X41A4404', 'AVULAMANDHA VARSHITHA LAKSHMI DURGA'),
+    ('23X41A4405', 'BACHHALA VENKATA SRI KRISHNA'),
+    ('23X41A4406', 'BADDAPU SAI KRISHNA'),
+    ('23X41A4407', 'BANAVATHU RISHI NAYAK'),
+    ('23X41A4408', 'BASETTY SHEKAR'),
+    ('23X41A4409', 'BETALA KINNERA'),
+    ('23X41A4410', 'BEZAWADA ANUSHA'),
+    ('23X41A4411', 'BEZAWADA JAHNAVI'),
+    ('23X41A4412', 'CHALLA GAYATHRI SUKANYA'),
+    ('23X41A4413', 'CHALAMURI DURGA PRASAD'),
+    ('23X41A4414', 'CHANDU VENKATA NAVYA'),
+    ('23X41A4415', 'CHEREDDY BRAHMAIAH'),
+    ('23X41A4416', 'DEVARLA RAMYA SRI'),
+    ('23X41A4417', 'DONE MEGHANADH'),
+    ('23X41A4418', 'KARTHIKEYA MAANAS'),
+    ('23X41A4419', 'DUVVADA YASHWANTH DAMODAR'),
+    ('23X41A4420', 'DUVVAPU MADHAVI'),
+    ('23X41A4421', 'GANTA PAVAN'),
+    ('23X41A4422', 'GORIPARTI NAGA PRASANNA'),
+    ('23X41A4423', 'GUGGILLA NAGA AMBIKA'),
+    ('23X41A4424', 'GUNTAKA BHAVYA SPURTHI'),
+    ('23X41A4425', 'GURRAM SANDEEP'),
+    ('23X41A4426', 'JANGAM MITHIL'),
+    ('23X41A4427', 'JELLI KRANTHI SWARUPA'),
+    ('23X41A4428', 'JUJJAVARAPU ISWARYA'),
+    ('23X41A4429', 'KARLAKUNTA SUBBA RAO'),
+    ('23X41A4430', 'KARRI NAGA MAHITH KUMAR'),
+    ('23X41A4431', 'KHARA PREM SUNIL'),
+    ('23X41A4432', 'KODTHATI SRI LALITHA'),
+    ('23X41A4433', 'KONDAPANENI HARSHITHA'),
+    ('23X41A4434', 'KOTHAPPLI KOMALI'),
+    ('23X41A4435', 'M. L. VENKATA SAI LAKSHMI'),
+    ('23X41A4436', 'MARAM JITHENDRA BABU'),
+    ('23X41A4437', 'MOHAMMAD SHAZIYA'),
+    ('23X41A4438', 'MIRIYALA BALA SWARITHA'),
+    ('23X41A4439', 'MOHAMMED MUSTAFA'),
+    ('23X41A4440', 'MUDDALA POURNIMA'),
+    ('23X41A4441', 'MYLAMURI BAYAZEED BABU'),
+    ('23X41A4442', 'NANDYALA ISWARYA'),
+    ('23X41A4443', 'NIMMAGADDA VAMSI'),
+    ('23X41A4444', 'RAJAVARAPU NANDINI DEVI'),
+    ('23X41A4445', 'R.CHAITANYA LAKSHMI'),
+    ('23X41A4446', 'SAMBMGI POORNIMA'),
+    ('23X41A4447', 'SAMBRAVU ABHI RAM'),
+    ('23X41A4448', 'SEELAM SNEHA'),
+    ('23X41A4449', 'SHAIK NAZEEM'),
+    ('23X41A4450', 'SHAIK NOWSHIYA'),
+    ('23X41A4451', 'SHAIK SALEEM'),
+    ('23X41A4452', 'SHAIK ZAKEER HUSSAIN'),
+    ('23X41A4453', 'SRINANCHARAIAH NAIDU GORRE'),
+    ('23X41A4454', 'SUNKARA VENKATA RENU GOPAL'),
+    ('23X41A4455', 'SURAPANENI AASRITHA'),
+    ('23X41A4456', 'VENKATA MOKSHANGA SURIBOYINA'),
+    ('23X41A4457', 'SYED SHAIL SAMAD'),
+    ('23X41A4458', 'GORRE. VENKATA GANGA'),
+    ('23X41A4459', 'TADIPARTHI NAGA TIRUMALA LAKSHMI JAHNAVI'),
+    ('23X41A4460', 'TATIKAYALA MAHARSHI'),
+    ('23X41A4461', 'THOTA LEELA VARDHAN'),
+    ('23X41A4462', 'TIRUVAYEPATI HARSHI'),
+    ('23X41A4463', 'VEMURI BRAHMAIAH'),
+    ('23X41A4464', 'VEMURI GOPI'),
+    ('23X41A4465', 'VINUKONDA HASEENA'),
+    ('23X41A4466', 'YERROJU SUSRITHA'),
+    ('24X45A4401', 'BASIREDDY ASWINI'),
+    ('24X45A4402', 'DAMERLA GEETHIKA'),
+    ('24X45A4403', 'KAVURI RAKESH'),
+    ('24X45A4404', 'KOTA SRIDHAR'),
+    ('24X45A4405', 'NANDIGAMA GOWTHAM'),
+    ('24X45A4406', 'NUNNA MANIKANTA'),
 ],
     (4, 'B'): [
-    ('23X41A4401', 'Aadirala Shirisha'),
-    ('23X41A4402', 'Ariveni Hema Sri'),
-    ('23X41A4403', 'Arja Jyothi Sri'),
-    ('23X41A4404', 'A. Varshitha Lakshmi Durga'),
-    ('23X41A4405', 'Bachhala Venkata Sri Krishna'),
-    ('23X41A4406', 'Baddapu Sai Krishna'),
-    ('23X41A4407', 'Banavathu Rishi Naik'),
-    ('23X41A4409', 'Betala Kinnera'),
-    ('23X41A4410', 'Bezawada Anusha'),
-    ('23X41A4411', 'Bezawada Jahnavi'),
-    ('23X41A4412', 'Challa Gayathri Sukanya'),
-    ('23X41A4414', 'Chandu Venkata Navya'),
-    ('23X41A4416', 'Devarla Ramya Sri'),
-    ('23X41A4417', 'Done Meghanadh'),
-    ('23X41A4419', 'Duvvada Yashwanth Damodar'),
-    ('23X41A4420', 'Duvvapu Madhavi'),
-    ('23X41A4421', 'Ganta Pavan'),
-    ('23X41A4422', 'Goriparti Naga Prasanna'),
-    ('23X41A4423', 'Guggilla Naga Ambika'),
-    ('23X41A4424', 'Guntaka Bhavya Spurthi'),
-    ('23X41A4425', 'Gurram Sandeep'),
-    ('23X41A4426', 'Jangam Mithil'),
-    ('23X41A4427', 'Jelli Kranthi Swarupa'),
-    ('23X41A4428', 'Jujjavarapu Iswarya'),
-    ('23X41A4429', 'Karlakunta Subba Rao'),
-    ('23X41A4430', 'Karri Naga Mahith Kumar'),
-    ('23X41A4432', 'Kodhati Sri Lalitha'),
-    ('23X41A4433', 'K. Harshitha Chowdary'),
-    ('23X41A4434', 'Kothapalli Komali'),
-    ('23X41A4435', 'M. L. Venkata Sai Lakshmi'),
-    ('23X41A4437', 'Md Shaziya Tarannum'),
-    ('23X41A4438', 'Miriyala Bala Swaritha'),
-    ('23X41A4439', 'Mohammed Mustafa'),
-    ('23X41A4441', 'M Bayazeed Babu'),
-    ('23X41A4442', 'Nandyala Iswarya'),
-    ('23X41A4444', 'Rajavarapu Nandini Devi'),
-    ('23X41A4445', 'R. Chaitanya Lakshmi'),
-    ('23X41A4446', 'Sambangi Poornima'),
-    ('23X41A4447', 'Sambravu Abhiram'),
-    ('23X41A4448', 'Seelam Sneha'),
-    ('23X41A4450', 'Shaik Nowshiya'),
-    ('23X41A4451', 'Shaik Saleem'),
-    ('23X41A4452', 'Shaik Zakeer Hussain'),
-    ('23X41A4453', 'Srinancharaiah Naidu G'),
-    ('23X41A4454', 'Sunkara Venkata Renu Gopal'),
-    ('23X41A4455', 'Surapaneni Aasritha'),
-    ('23X41A4456', 'Suriboina Venkata Mokshagna'),
-    ('23X41A4457', 'Syed Sahil Samad'),
-    ('23X41A4459', 'T. Jahanavi'),
-    ('23X41A4460', 'Tatikayala Maharshi'),
-    ('23X41A4461', 'Thota Leela Vardhan'),
-    ('23X41A4462', 'Tiruvayepati Harshi'),
-    ('23X41A4464', 'Vemuri Gopi'),
-    ('23X41A4465', 'Vinukonda Haseena'),
-    ('23X41A4466', 'Yarroju Susritha'),
-    ('24X45A4401', 'Basireddy Aswini'),
-    ('24X45A4402', 'Damerla Sai Geethika'),
-    ('24X45A4403', 'Kavuri Rakesh'),
-    ('24X45A4404', 'Kota Sridhar'),
-    ('24X45A4406', 'Nunna Venkata Sai Manikanta'),
+    ('23X41A4401', 'ADIRALA SHIRISHA'),
+    ('23X41A4402', 'ARIVENI HEMASRI'),
+    ('23X41A4403', 'ARJA JYOTHI SRI'),
+    ('23X41A4404', 'AVULAMANDHA VARSHITHA LAKSHMI DURGA'),
+    ('23X41A4405', 'BACHHALA VENKATA SRI KRISHNA'),
+    ('23X41A4406', 'BADDAPU SAI KRISHNA'),
+    ('23X41A4407', 'BANAVATHU RISHI NAYAK'),
+    ('23X41A4408', 'BASETTY SHEKAR'),
+    ('23X41A4409', 'BETALA KINNERA'),
+    ('23X41A4410', 'BEZAWADA ANUSHA'),
+    ('23X41A4411', 'BEZAWADA JAHNAVI'),
+    ('23X41A4412', 'CHALLA GAYATHRI SUKANYA'),
+    ('23X41A4413', 'CHALAMURI DURGA PRASAD'),
+    ('23X41A4414', 'CHANDU VENKATA NAVYA'),
+    ('23X41A4415', 'CHEREDDY BRAHMAIAH'),
+    ('23X41A4416', 'DEVARLA RAMYA SRI'),
+    ('23X41A4417', 'DONE MEGHANADH'),
+    ('23X41A4418', 'KARTHIKEYA MAANAS'),
+    ('23X41A4419', 'DUVVADA YASHWANTH DAMODAR'),
+    ('23X41A4420', 'DUVVAPU MADHAVI'),
+    ('23X41A4421', 'GANTA PAVAN'),
+    ('23X41A4422', 'GORIPARTI NAGA PRASANNA'),
+    ('23X41A4423', 'GUGGILLA NAGA AMBIKA'),
+    ('23X41A4424', 'GUNTAKA BHAVYA SPURTHI'),
+    ('23X41A4425', 'GURRAM SANDEEP'),
+    ('23X41A4426', 'JANGAM MITHIL'),
+    ('23X41A4427', 'JELLI KRANTHI SWARUPA'),
+    ('23X41A4428', 'JUJJAVARAPU ISWARYA'),
+    ('23X41A4429', 'KARLAKUNTA SUBBA RAO'),
+    ('23X41A4430', 'KARRI NAGA MAHITH KUMAR'),
+    ('23X41A4431', 'KHARA PREM SUNIL'),
+    ('23X41A4432', 'KODTHATI SRI LALITHA'),
+    ('23X41A4433', 'KONDAPANENI HARSHITHA'),
+    ('23X41A4434', 'KOTHAPPLI KOMALI'),
+    ('23X41A4435', 'M. L. VENKATA SAI LAKSHMI'),
+    ('23X41A4436', 'MARAM JITHENDRA BABU'),
+    ('23X41A4437', 'MOHAMMAD SHAZIYA'),
+    ('23X41A4438', 'MIRIYALA BALA SWARITHA'),
+    ('23X41A4439', 'MOHAMMED MUSTAFA'),
+    ('23X41A4440', 'MUDDALA POURNIMA'),
+    ('23X41A4441', 'MYLAMURI BAYAZEED BABU'),
+    ('23X41A4442', 'NANDYALA ISWARYA'),
+    ('23X41A4443', 'NIMMAGADDA VAMSI'),
+    ('23X41A4444', 'RAJAVARAPU NANDINI DEVI'),
+    ('23X41A4445', 'R.CHAITANYA LAKSHMI'),
+    ('23X41A4446', 'SAMBMGI POORNIMA'),
+    ('23X41A4447', 'SAMBRAVU ABHI RAM'),
+    ('23X41A4448', 'SEELAM SNEHA'),
+    ('23X41A4449', 'SHAIK NAZEEM'),
+    ('23X41A4450', 'SHAIK NOWSHIYA'),
+    ('23X41A4451', 'SHAIK SALEEM'),
+    ('23X41A4452', 'SHAIK ZAKEER HUSSAIN'),
+    ('23X41A4453', 'SRINANCHARAIAH NAIDU GORRE'),
+    ('23X41A4454', 'SUNKARA VENKATA RENU GOPAL'),
+    ('23X41A4455', 'SURAPANENI AASRITHA'),
+    ('23X41A4456', 'VENKATA MOKSHANGA SURIBOYINA'),
+    ('23X41A4457', 'SYED SHAIL SAMAD'),
+    ('23X41A4458', 'GORRE. VENKATA GANGA'),
+    ('23X41A4459', 'TADIPARTHI NAGA TIRUMALA LAKSHMI JAHNAVI'),
+    ('23X41A4460', 'TATIKAYALA MAHARSHI'),
+    ('23X41A4461', 'THOTA LEELA VARDHAN'),
+    ('23X41A4462', 'TIRUVAYEPATI HARSHI'),
+    ('23X41A4463', 'VEMURI BRAHMAIAH'),
+    ('23X41A4464', 'VEMURI GOPI'),
+    ('23X41A4465', 'VINUKONDA HASEENA'),
+    ('23X41A4466', 'YERROJU SUSRITHA'),
+    ('24X45A4401', 'BASIREDDY ASWINI'),
+    ('24X45A4402', 'DAMERLA GEETHIKA'),
+    ('24X45A4403', 'KAVURI RAKESH'),
+    ('24X45A4404', 'KOTA SRIDHAR'),
+    ('24X45A4405', 'NANDIGAMA GOWTHAM'),
+    ('24X45A4406', 'NUNNA MANIKANTA'),
 ],
 }
 
@@ -560,7 +579,11 @@ def init_db():
         except sqlite3.OperationalError: pass
     pw=hashlib.sha256('Admin123@321'.encode()).hexdigest()
     c.execute('INSERT OR IGNORE INTO users(username,password_hash,display_name) VALUES(?,?,?)',('DATA SCIENCE',pw,'Data Science Faculty'))
-    # Load the supplied Years 2-4 student lists.
+    # Keep the small Year-1 demo list, and load the supplied Years 2-4 lists.
+    for year in (1,):
+        for section in ('A','B'):
+            for roll,name in SEED_STUDENTS:
+                c.execute('INSERT OR IGNORE INTO students(roll_no,name,year,section) VALUES(?,?,?,?)',(roll,name,year,section))
     for (year, section), roster in STUDENT_DATA.items():
         for roll, name in roster:
             c.execute(
@@ -591,7 +614,7 @@ def get_timetable(year, section, day=None):
     return out
 
 def current_session(year, section, now=None):
-    now = now or india_now()
+    now = now or datetime.now()
     # Sunday is a college holiday.
     day = ['MON','TUE','WED','THU','FRI','SAT','SUN'][now.weekday()]
     if day == 'SUN': return None
@@ -620,7 +643,7 @@ class Handler(SimpleHTTPRequestHandler):
             except: year=0
             section=x.get('section'); records=x.get('records',[]); submitted_by=str(x.get('submitted_by','DATA SCIENCE')).strip() or 'DATA SCIENCE'
             if year not in range(2,5) or section not in ('A','B'): return self.send_json({'error':'Timetable attendance is enabled for Years 2–4 only.'},400)
-            now=india_now(); today=now.strftime('%Y-%m-%d'); session=current_session(year,section,now)
+            now=datetime.now(); today=now.strftime('%Y-%m-%d'); session=current_session(year,section,now)
             if not session: return self.send_json({'error':'Attendance is not open right now. Attendance can only be submitted during the scheduled timetable session.'},409)
             key=f"{today}|{year}|{section}|{session['day']}|{session['slot_index']}"
             c=db()
@@ -661,9 +684,9 @@ class Handler(SimpleHTTPRequestHandler):
                 year=int(q.get('year',['0'])[0]); section=q.get('section',['A'])[0]
                 s=current_session(year,section)
                 if not s:
-                    now=india_now(); day=['MON','TUE','WED','THU','FRI','SAT','SUN'][now.weekday()]
+                    now=datetime.now(); day=['MON','TUE','WED','THU','FRI','SAT','SUN'][now.weekday()]
                     return self.send_json({'open':False,'holiday':day=='SUN','day':day,'day_name':DAY_NAMES[day]})
-                today=india_now().strftime('%Y-%m-%d'); key=f"{today}|{year}|{section}|{s['day']}|{s['slot_index']}"
+                today=datetime.now().strftime('%Y-%m-%d'); key=f"{today}|{year}|{section}|{s['day']}|{s['slot_index']}"
                 done=c.execute('SELECT id,submitted_at,submitted_by FROM attendance_sessions WHERE session_key=?',(key,)).fetchone()
                 return self.send_json({'open':not bool(done),'already_submitted':bool(done),'session':dict(s, session_id=(done['id'] if done else None), session_date=today),'submitted':dict(done) if done else None})
             if p.path=='/api/attendance':
@@ -700,8 +723,9 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json({'error':'Not found'},404)
         finally: c.close()
 
-if __name__ == '__main__':
-    init_db()
-    port = int(os.environ.get('PORT', 10000))
-    print(f'CSD Attendance running on 0.0.0.0:{port}')
-    ThreadingHTTPServer(('0.0.0.0', port), Handler).serve_forever()
+if __name__=='__main__':
+   import os
+init_db()
+port = int(os.environ.get("PORT", 8000))
+print(f"CSD Attendance running on port {port}")
+ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
