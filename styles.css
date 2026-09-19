@@ -252,3 +252,7 @@ body.light .year-sections span{color:var(--accent)}
   }
 
 }
+/* Submit Attendance button - black text */
+.save-btn {
+  color: #111827 !important;
+}
