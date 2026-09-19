@@ -2,6 +2,12 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import sqlite3, json, os, hashlib, hmac
 from datetime import datetime, date
+from zoneinfo import ZoneInfo
+
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
+
+def india_now():
+    return datetime.now(INDIA_TZ)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(ROOT, 'attendance.db')
@@ -555,7 +561,11 @@ def init_db():
         except sqlite3.OperationalError: pass
     pw=hashlib.sha256('Admin123@321'.encode()).hexdigest()
     c.execute('INSERT OR IGNORE INTO users(username,password_hash,display_name) VALUES(?,?,?)',('DATA SCIENCE',pw,'Data Science Faculty'))
-    # Load the supplied Years 2-4 student lists.
+    # Keep the small Year-1 demo list, and load the supplied Years 2-4 lists.
+    for year in (1,):
+        for section in ('A','B'):
+            for roll,name in SEED_STUDENTS:
+                c.execute('INSERT OR IGNORE INTO students(roll_no,name,year,section) VALUES(?,?,?,?)',(roll,name,year,section))
     for (year, section), roster in STUDENT_DATA.items():
         for roll, name in roster:
             c.execute(
@@ -586,7 +596,7 @@ def get_timetable(year, section, day=None):
     return out
 
 def current_session(year, section, now=None):
-    now = now or datetime.now()
+    now = now or india_now()
     # Sunday is a college holiday.
     day = ['MON','TUE','WED','THU','FRI','SAT','SUN'][now.weekday()]
     if day == 'SUN': return None
@@ -615,7 +625,7 @@ class Handler(SimpleHTTPRequestHandler):
             except: year=0
             section=x.get('section'); records=x.get('records',[]); submitted_by=str(x.get('submitted_by','DATA SCIENCE')).strip() or 'DATA SCIENCE'
             if year not in range(2,5) or section not in ('A','B'): return self.send_json({'error':'Timetable attendance is enabled for Years 2–4 only.'},400)
-            now=datetime.now(); today=now.strftime('%Y-%m-%d'); session=current_session(year,section,now)
+            now=india_now(); today=now.strftime('%Y-%m-%d'); session=current_session(year,section,now)
             if not session: return self.send_json({'error':'Attendance is not open right now. Attendance can only be submitted during the scheduled timetable session.'},409)
             key=f"{today}|{year}|{section}|{session['day']}|{session['slot_index']}"
             c=db()
@@ -656,9 +666,9 @@ class Handler(SimpleHTTPRequestHandler):
                 year=int(q.get('year',['0'])[0]); section=q.get('section',['A'])[0]
                 s=current_session(year,section)
                 if not s:
-                    now=datetime.now(); day=['MON','TUE','WED','THU','FRI','SAT','SUN'][now.weekday()]
+                    now=india_now(); day=['MON','TUE','WED','THU','FRI','SAT','SUN'][now.weekday()]
                     return self.send_json({'open':False,'holiday':day=='SUN','day':day,'day_name':DAY_NAMES[day]})
-                today=datetime.now().strftime('%Y-%m-%d'); key=f"{today}|{year}|{section}|{s['day']}|{s['slot_index']}"
+                today=india_now().strftime('%Y-%m-%d'); key=f"{today}|{year}|{section}|{s['day']}|{s['slot_index']}"
                 done=c.execute('SELECT id,submitted_at,submitted_by FROM attendance_sessions WHERE session_key=?',(key,)).fetchone()
                 return self.send_json({'open':not bool(done),'already_submitted':bool(done),'session':dict(s, session_id=(done['id'] if done else None), session_date=today),'submitted':dict(done) if done else None})
             if p.path=='/api/attendance':
