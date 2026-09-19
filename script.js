@@ -1273,6 +1273,99 @@ function percentage() {
 
 function renderAttendanceLocal() {
 
+  /* Update student check buttons */
+  document.querySelectorAll(".student-row").forEach(r => {
+
+    const b = r.querySelector(".check-btn");
+
+    if (!b || b.disabled) return;
+
+    const v = state.attendance[r.dataset.roll] === true;
+
+    b.classList.toggle("checked", v);
+    b.textContent = v ? "✓" : "";
+  });
+
+  /* Update Present / Absent counts in the bottom bar */
+  const bar = document.querySelector(".save-bar > div");
+
+  if (bar) {
+    bar.innerHTML = `
+      <span style="color:var(--green)">
+        Present
+      </span>
+
+      <strong>
+        ${countPresent()}
+      </strong>
+
+      &nbsp;
+
+      <span style="color:var(--red)">
+        Absent
+      </span>
+
+      <strong>
+        ${STUDENTS.length - countPresent()}
+      </strong>
+    `;
+  }
+
+  /* Update Session Summary */
+  const summaryCard = document.querySelector(".summary-card");
+
+  if (summaryCard) {
+
+    const present = countPresent();
+    const absent = STUDENTS.length - present;
+    const percent = percentage();
+
+    /* Update circular percentage ring */
+    const ring = summaryCard.querySelector(".ring");
+
+    if (ring) {
+
+      ring.style.background =
+        `conic-gradient(
+          var(--green) 0 ${percent}%,
+          var(--red) ${percent}% 100%
+        )`;
+
+      const strong = ring.querySelector("strong");
+
+      if (strong) {
+        strong.textContent = `${percent}%`;
+      }
+    }
+
+    /* Update Session Summary numbers */
+    const legend = summaryCard.querySelector(".legend");
+
+    if (legend) {
+
+      legend.innerHTML = `
+        <div>
+          <span>
+            <i class="dot green"></i>
+            Present
+          </span>
+
+          <b>${present}</b>
+        </div>
+
+        <div>
+          <span>
+            <i class="dot red"></i>
+            Absent
+          </span>
+
+          <b>${absent}</b>
+        </div>
+      `;
+    }
+  }
+}
+
   document
     .querySelectorAll(".student-row")
     .forEach(r => {
