@@ -1273,54 +1273,49 @@ function percentage() {
 
 function renderAttendanceLocal() {
 
-  /* Update student check buttons */
-  document.querySelectorAll(".student-row").forEach(r => {
+  // Update student check buttons
+  document.querySelectorAll(".student-row").forEach(row => {
 
-    const b = r.querySelector(".check-btn");
+    const button = row.querySelector(".check-btn");
 
-    if (!b || b.disabled) return;
+    if (!button || button.disabled) return;
 
-    const v = state.attendance[r.dataset.roll] === true;
+    const roll = row.dataset.roll;
+    const present = state.attendance[roll] === true;
 
-    b.classList.toggle("checked", v);
-    b.textContent = v ? "✓" : "";
+    button.classList.toggle("checked", present);
+    button.textContent = present ? "✓" : "";
   });
 
-  /* Update Present / Absent counts in the bottom bar */
+
+  // Calculate attendance
+  const present = countPresent();
+  const absent = STUDENTS.length - present;
+  const percent = percentage();
+
+
+  // Update bottom Present / Absent count
   const bar = document.querySelector(".save-bar > div");
 
   if (bar) {
     bar.innerHTML = `
-      <span style="color:var(--green)">
-        Present
-      </span>
-
-      <strong>
-        ${countPresent()}
-      </strong>
+      <span style="color:var(--green)">Present</span>
+      <strong>${present}</strong>
 
       &nbsp;
 
-      <span style="color:var(--red)">
-        Absent
-      </span>
-
-      <strong>
-        ${STUDENTS.length - countPresent()}
-      </strong>
+      <span style="color:var(--red)">Absent</span>
+      <strong>${absent}</strong>
     `;
   }
 
-  /* Update Session Summary */
+
+  // Update Session Summary
   const summaryCard = document.querySelector(".summary-card");
 
   if (summaryCard) {
 
-    const present = countPresent();
-    const absent = STUDENTS.length - present;
-    const percent = percentage();
-
-    /* Update circular percentage ring */
+    // Update percentage ring
     const ring = summaryCard.querySelector(".ring");
 
     if (ring) {
@@ -1331,14 +1326,15 @@ function renderAttendanceLocal() {
           var(--red) ${percent}% 100%
         )`;
 
-      const strong = ring.querySelector("strong");
+      const percentageText = ring.querySelector("strong");
 
-      if (strong) {
-        strong.textContent = `${percent}%`;
+      if (percentageText) {
+        percentageText.textContent = `${percent}%`;
       }
     }
 
-    /* Update Session Summary numbers */
+
+    // Update Present / Absent numbers
     const legend = summaryCard.querySelector(".legend");
 
     if (legend) {
@@ -1365,7 +1361,6 @@ function renderAttendanceLocal() {
     }
   }
 }
-
   document
     .querySelectorAll(".student-row")
     .forEach(r => {
