@@ -579,22 +579,16 @@ def init_db():
         except sqlite3.OperationalError: pass
     pw=hashlib.sha256('Admin123@321'.encode()).hexdigest()
     c.execute('INSERT OR IGNORE INTO users(username,password_hash,display_name) VALUES(?,?,?)',('DATA SCIENCE',pw,'Data Science Faculty'))
-   for (year, section), roster in STUDENT_DATA.items():
-    for roll, name in roster:
-        c.execute(
-            'INSERT OR IGNORE INTO students(roll_no,name,year,section) VALUES(?,?,?,?)',
-            (roll, name, year, section)
-        )
-  for (year, section), roster in STUDENT_DATA.items():
-    for roll, name in roster:
-        c.execute(
-            'INSERT OR IGNORE INTO students(roll_no,name,year,section) VALUES(?,?,?,?)',
-            (roll, name, year, section)
-        )
+    for (year, section), roster in STUDENT_DATA.items():
+        for roll, name in roster:
+            c.execute(
+                'INSERT OR IGNORE INTO students(roll_no,name,year,section) VALUES(?,?,?,?)',
+                (roll, name, year, section)
+            )
 
-c.commit(); c.close()
+    c.commit()
+    c.close()
 
-def get_timetable(year, section, day=None):
 def get_timetable(year, section, day=None):
     if year not in TT or section not in TT[year]: return []
     slots_master = TIME_SLOTS
@@ -727,8 +721,7 @@ class Handler(SimpleHTTPRequestHandler):
         finally: c.close()
 
 if __name__=='__main__':
-   import os
-init_db()
-port = int(os.environ.get("PORT", 8000))
-print(f"CSD Attendance running on port {port}")
-ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
+    init_db()
+    port = int(os.environ.get("PORT", 10000))
+    print(f"CSD Attendance running on 0.0.0.0:{port}")
+    ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
