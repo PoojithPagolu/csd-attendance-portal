@@ -2,9 +2,17 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import sqlite3, json, os, hashlib, hmac
 from datetime import datetime, date
+from zoneinfo import ZoneInfo
+
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
+
+def india_now():
+    return datetime.now(INDIA_TZ)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(ROOT, 'attendance.db')
+
+SEED_STUDENTS = []  # Year-1 demo roster is intentionally empty.
 
 # Real department student lists. Phone numbers are intentionally not stored here.
 STUDENT_DATA = {
@@ -283,152 +291,128 @@ STUDENT_DATA = {
     ('25X45A4416', 'K.Kiran'),
 ],
     (4, 'A'): [
-    ('23X41A4401', 'ADIRALA SHIRISHA'),
-    ('23X41A4402', 'ARIVENI HEMASRI'),
-    ('23X41A4403', 'ARJA JYOTHI SRI'),
-    ('23X41A4404', 'AVULAMANDHA VARSHITHA LAKSHMI DURGA'),
-    ('23X41A4405', 'BACHHALA VENKATA SRI KRISHNA'),
-    ('23X41A4406', 'BADDAPU SAI KRISHNA'),
-    ('23X41A4407', 'BANAVATHU RISHI NAYAK'),
-    ('23X41A4408', 'BASETTY SHEKAR'),
-    ('23X41A4409', 'BETALA KINNERA'),
-    ('23X41A4410', 'BEZAWADA ANUSHA'),
-    ('23X41A4411', 'BEZAWADA JAHNAVI'),
-    ('23X41A4412', 'CHALLA GAYATHRI SUKANYA'),
-    ('23X41A4413', 'CHALAMURI DURGA PRASAD'),
-    ('23X41A4414', 'CHANDU VENKATA NAVYA'),
-    ('23X41A4415', 'CHEREDDY BRAHMAIAH'),
-    ('23X41A4416', 'DEVARLA RAMYA SRI'),
-    ('23X41A4417', 'DONE MEGHANADH'),
-    ('23X41A4418', 'KARTHIKEYA MAANAS'),
-    ('23X41A4419', 'DUVVADA YASHWANTH DAMODAR'),
-    ('23X41A4420', 'DUVVAPU MADHAVI'),
-    ('23X41A4421', 'GANTA PAVAN'),
-    ('23X41A4422', 'GORIPARTI NAGA PRASANNA'),
-    ('23X41A4423', 'GUGGILLA NAGA AMBIKA'),
-    ('23X41A4424', 'GUNTAKA BHAVYA SPURTHI'),
-    ('23X41A4425', 'GURRAM SANDEEP'),
-    ('23X41A4426', 'JANGAM MITHIL'),
-    ('23X41A4427', 'JELLI KRANTHI SWARUPA'),
-    ('23X41A4428', 'JUJJAVARAPU ISWARYA'),
-    ('23X41A4429', 'KARLAKUNTA SUBBA RAO'),
-    ('23X41A4430', 'KARRI NAGA MAHITH KUMAR'),
-    ('23X41A4431', 'KHARA PREM SUNIL'),
-    ('23X41A4432', 'KODTHATI SRI LALITHA'),
-    ('23X41A4433', 'KONDAPANENI HARSHITHA'),
-    ('23X41A4434', 'KOTHAPPLI KOMALI'),
-    ('23X41A4435', 'M. L. VENKATA SAI LAKSHMI'),
-    ('23X41A4436', 'MARAM JITHENDRA BABU'),
-    ('23X41A4437', 'MOHAMMAD SHAZIYA'),
-    ('23X41A4438', 'MIRIYALA BALA SWARITHA'),
-    ('23X41A4439', 'MOHAMMED MUSTAFA'),
-    ('23X41A4440', 'MUDDALA POURNIMA'),
-    ('23X41A4441', 'MYLAMURI BAYAZEED BABU'),
-    ('23X41A4442', 'NANDYALA ISWARYA'),
-    ('23X41A4443', 'NIMMAGADDA VAMSI'),
-    ('23X41A4444', 'RAJAVARAPU NANDINI DEVI'),
-    ('23X41A4445', 'R.CHAITANYA LAKSHMI'),
-    ('23X41A4446', 'SAMBMGI POORNIMA'),
-    ('23X41A4447', 'SAMBRAVU ABHI RAM'),
-    ('23X41A4448', 'SEELAM SNEHA'),
-    ('23X41A4449', 'SHAIK NAZEEM'),
-    ('23X41A4450', 'SHAIK NOWSHIYA'),
-    ('23X41A4451', 'SHAIK SALEEM'),
-    ('23X41A4452', 'SHAIK ZAKEER HUSSAIN'),
-    ('23X41A4453', 'SRINANCHARAIAH NAIDU GORRE'),
-    ('23X41A4454', 'SUNKARA VENKATA RENU GOPAL'),
-    ('23X41A4455', 'SURAPANENI AASRITHA'),
-    ('23X41A4456', 'VENKATA MOKSHANGA SURIBOYINA'),
-    ('23X41A4457', 'SYED SHAIL SAMAD'),
-    ('23X41A4458', 'GORRE. VENKATA GANGA'),
-    ('23X41A4459', 'TADIPARTHI NAGA TIRUMALA LAKSHMI JAHNAVI'),
-    ('23X41A4460', 'TATIKAYALA MAHARSHI'),
-    ('23X41A4461', 'THOTA LEELA VARDHAN'),
-    ('23X41A4462', 'TIRUVAYEPATI HARSHI'),
-    ('23X41A4463', 'VEMURI BRAHMAIAH'),
-    ('23X41A4464', 'VEMURI GOPI'),
-    ('23X41A4465', 'VINUKONDA HASEENA'),
-    ('23X41A4466', 'YERROJU SUSRITHA'),
-    ('24X45A4401', 'BASIREDDY ASWINI'),
-    ('24X45A4402', 'DAMERLA GEETHIKA'),
-    ('24X45A4403', 'KAVURI RAKESH'),
-    ('24X45A4404', 'KOTA SRIDHAR'),
-    ('24X45A4405', 'NANDIGAMA GOWTHAM'),
-    ('24X45A4406', 'NUNNA MANIKANTA'),
+    ('23X41A4401', 'Aadirala Shirisha'),
+    ('23X41A4402', 'Ariveni Hema Sri'),
+    ('23X41A4403', 'Arja Jyothi Sri'),
+    ('23X41A4404', 'A. Varshitha Lakshmi Durga'),
+    ('23X41A4405', 'Bachhala Venkata Sri Krishna'),
+    ('23X41A4406', 'Baddapu Sai Krishna'),
+    ('23X41A4407', 'Banavathu Rishi Naik'),
+    ('23X41A4409', 'Betala Kinnera'),
+    ('23X41A4410', 'Bezawada Anusha'),
+    ('23X41A4411', 'Bezawada Jahnavi'),
+    ('23X41A4412', 'Challa Gayathri Sukanya'),
+    ('23X41A4414', 'Chandu Venkata Navya'),
+    ('23X41A4416', 'Devarla Ramya Sri'),
+    ('23X41A4417', 'Done Meghanadh'),
+    ('23X41A4419', 'Duvvada Yashwanth Damodar'),
+    ('23X41A4420', 'Duvvapu Madhavi'),
+    ('23X41A4421', 'Ganta Pavan'),
+    ('23X41A4422', 'Goriparti Naga Prasanna'),
+    ('23X41A4423', 'Guggilla Naga Ambika'),
+    ('23X41A4424', 'Guntaka Bhavya Spurthi'),
+    ('23X41A4425', 'Gurram Sandeep'),
+    ('23X41A4426', 'Jangam Mithil'),
+    ('23X41A4427', 'Jelli Kranthi Swarupa'),
+    ('23X41A4428', 'Jujjavarapu Iswarya'),
+    ('23X41A4429', 'Karlakunta Subba Rao'),
+    ('23X41A4430', 'Karri Naga Mahith Kumar'),
+    ('23X41A4432', 'Kodhati Sri Lalitha'),
+    ('23X41A4433', 'K. Harshitha Chowdary'),
+    ('23X41A4434', 'Kothapalli Komali'),
+    ('23X41A4435', 'M. L. Venkata Sai Lakshmi'),
+    ('23X41A4437', 'Md Shaziya Tarannum'),
+    ('23X41A4438', 'Miriyala Bala Swaritha'),
+    ('23X41A4439', 'Mohammed Mustafa'),
+    ('23X41A4441', 'M Bayazeed Babu'),
+    ('23X41A4442', 'Nandyala Iswarya'),
+    ('23X41A4444', 'Rajavarapu Nandini Devi'),
+    ('23X41A4445', 'R. Chaitanya Lakshmi'),
+    ('23X41A4446', 'Sambangi Poornima'),
+    ('23X41A4447', 'Sambravu Abhiram'),
+    ('23X41A4448', 'Seelam Sneha'),
+    ('23X41A4450', 'Shaik Nowshiya'),
+    ('23X41A4451', 'Shaik Saleem'),
+    ('23X41A4452', 'Shaik Zakeer Hussain'),
+    ('23X41A4453', 'Srinancharaiah Naidu G'),
+    ('23X41A4454', 'Sunkara Venkata Renu Gopal'),
+    ('23X41A4455', 'Surapaneni Aasritha'),
+    ('23X41A4456', 'Suriboina Venkata Mokshagna'),
+    ('23X41A4457', 'Syed Sahil Samad'),
+    ('23X41A4459', 'T. Jahanavi'),
+    ('23X41A4460', 'Tatikayala Maharshi'),
+    ('23X41A4461', 'Thota Leela Vardhan'),
+    ('23X41A4462', 'Tiruvayepati Harshi'),
+    ('23X41A4464', 'Vemuri Gopi'),
+    ('23X41A4465', 'Vinukonda Haseena'),
+    ('23X41A4466', 'Yarroju Susritha'),
+    ('24X45A4401', 'Basireddy Aswini'),
+    ('24X45A4402', 'Damerla Sai Geethika'),
+    ('24X45A4403', 'Kavuri Rakesh'),
+    ('24X45A4404', 'Kota Sridhar'),
+    ('24X45A4406', 'Nunna Venkata Sai Manikanta'),
 ],
     (4, 'B'): [
-    ('23X41A4401', 'ADIRALA SHIRISHA'),
-    ('23X41A4402', 'ARIVENI HEMASRI'),
-    ('23X41A4403', 'ARJA JYOTHI SRI'),
-    ('23X41A4404', 'AVULAMANDHA VARSHITHA LAKSHMI DURGA'),
-    ('23X41A4405', 'BACHHALA VENKATA SRI KRISHNA'),
-    ('23X41A4406', 'BADDAPU SAI KRISHNA'),
-    ('23X41A4407', 'BANAVATHU RISHI NAYAK'),
-    ('23X41A4408', 'BASETTY SHEKAR'),
-    ('23X41A4409', 'BETALA KINNERA'),
-    ('23X41A4410', 'BEZAWADA ANUSHA'),
-    ('23X41A4411', 'BEZAWADA JAHNAVI'),
-    ('23X41A4412', 'CHALLA GAYATHRI SUKANYA'),
-    ('23X41A4413', 'CHALAMURI DURGA PRASAD'),
-    ('23X41A4414', 'CHANDU VENKATA NAVYA'),
-    ('23X41A4415', 'CHEREDDY BRAHMAIAH'),
-    ('23X41A4416', 'DEVARLA RAMYA SRI'),
-    ('23X41A4417', 'DONE MEGHANADH'),
-    ('23X41A4418', 'KARTHIKEYA MAANAS'),
-    ('23X41A4419', 'DUVVADA YASHWANTH DAMODAR'),
-    ('23X41A4420', 'DUVVAPU MADHAVI'),
-    ('23X41A4421', 'GANTA PAVAN'),
-    ('23X41A4422', 'GORIPARTI NAGA PRASANNA'),
-    ('23X41A4423', 'GUGGILLA NAGA AMBIKA'),
-    ('23X41A4424', 'GUNTAKA BHAVYA SPURTHI'),
-    ('23X41A4425', 'GURRAM SANDEEP'),
-    ('23X41A4426', 'JANGAM MITHIL'),
-    ('23X41A4427', 'JELLI KRANTHI SWARUPA'),
-    ('23X41A4428', 'JUJJAVARAPU ISWARYA'),
-    ('23X41A4429', 'KARLAKUNTA SUBBA RAO'),
-    ('23X41A4430', 'KARRI NAGA MAHITH KUMAR'),
-    ('23X41A4431', 'KHARA PREM SUNIL'),
-    ('23X41A4432', 'KODTHATI SRI LALITHA'),
-    ('23X41A4433', 'KONDAPANENI HARSHITHA'),
-    ('23X41A4434', 'KOTHAPPLI KOMALI'),
-    ('23X41A4435', 'M. L. VENKATA SAI LAKSHMI'),
-    ('23X41A4436', 'MARAM JITHENDRA BABU'),
-    ('23X41A4437', 'MOHAMMAD SHAZIYA'),
-    ('23X41A4438', 'MIRIYALA BALA SWARITHA'),
-    ('23X41A4439', 'MOHAMMED MUSTAFA'),
-    ('23X41A4440', 'MUDDALA POURNIMA'),
-    ('23X41A4441', 'MYLAMURI BAYAZEED BABU'),
-    ('23X41A4442', 'NANDYALA ISWARYA'),
-    ('23X41A4443', 'NIMMAGADDA VAMSI'),
-    ('23X41A4444', 'RAJAVARAPU NANDINI DEVI'),
-    ('23X41A4445', 'R.CHAITANYA LAKSHMI'),
-    ('23X41A4446', 'SAMBMGI POORNIMA'),
-    ('23X41A4447', 'SAMBRAVU ABHI RAM'),
-    ('23X41A4448', 'SEELAM SNEHA'),
-    ('23X41A4449', 'SHAIK NAZEEM'),
-    ('23X41A4450', 'SHAIK NOWSHIYA'),
-    ('23X41A4451', 'SHAIK SALEEM'),
-    ('23X41A4452', 'SHAIK ZAKEER HUSSAIN'),
-    ('23X41A4453', 'SRINANCHARAIAH NAIDU GORRE'),
-    ('23X41A4454', 'SUNKARA VENKATA RENU GOPAL'),
-    ('23X41A4455', 'SURAPANENI AASRITHA'),
-    ('23X41A4456', 'VENKATA MOKSHANGA SURIBOYINA'),
-    ('23X41A4457', 'SYED SHAIL SAMAD'),
-    ('23X41A4458', 'GORRE. VENKATA GANGA'),
-    ('23X41A4459', 'TADIPARTHI NAGA TIRUMALA LAKSHMI JAHNAVI'),
-    ('23X41A4460', 'TATIKAYALA MAHARSHI'),
-    ('23X41A4461', 'THOTA LEELA VARDHAN'),
-    ('23X41A4462', 'TIRUVAYEPATI HARSHI'),
-    ('23X41A4463', 'VEMURI BRAHMAIAH'),
-    ('23X41A4464', 'VEMURI GOPI'),
-    ('23X41A4465', 'VINUKONDA HASEENA'),
-    ('23X41A4466', 'YERROJU SUSRITHA'),
-    ('24X45A4401', 'BASIREDDY ASWINI'),
-    ('24X45A4402', 'DAMERLA GEETHIKA'),
-    ('24X45A4403', 'KAVURI RAKESH'),
-    ('24X45A4404', 'KOTA SRIDHAR'),
-    ('24X45A4405', 'NANDIGAMA GOWTHAM'),
-    ('24X45A4406', 'NUNNA MANIKANTA'),
+    ('23X41A4401', 'Aadirala Shirisha'),
+    ('23X41A4402', 'Ariveni Hema Sri'),
+    ('23X41A4403', 'Arja Jyothi Sri'),
+    ('23X41A4404', 'A. Varshitha Lakshmi Durga'),
+    ('23X41A4405', 'Bachhala Venkata Sri Krishna'),
+    ('23X41A4406', 'Baddapu Sai Krishna'),
+    ('23X41A4407', 'Banavathu Rishi Naik'),
+    ('23X41A4409', 'Betala Kinnera'),
+    ('23X41A4410', 'Bezawada Anusha'),
+    ('23X41A4411', 'Bezawada Jahnavi'),
+    ('23X41A4412', 'Challa Gayathri Sukanya'),
+    ('23X41A4414', 'Chandu Venkata Navya'),
+    ('23X41A4416', 'Devarla Ramya Sri'),
+    ('23X41A4417', 'Done Meghanadh'),
+    ('23X41A4419', 'Duvvada Yashwanth Damodar'),
+    ('23X41A4420', 'Duvvapu Madhavi'),
+    ('23X41A4421', 'Ganta Pavan'),
+    ('23X41A4422', 'Goriparti Naga Prasanna'),
+    ('23X41A4423', 'Guggilla Naga Ambika'),
+    ('23X41A4424', 'Guntaka Bhavya Spurthi'),
+    ('23X41A4425', 'Gurram Sandeep'),
+    ('23X41A4426', 'Jangam Mithil'),
+    ('23X41A4427', 'Jelli Kranthi Swarupa'),
+    ('23X41A4428', 'Jujjavarapu Iswarya'),
+    ('23X41A4429', 'Karlakunta Subba Rao'),
+    ('23X41A4430', 'Karri Naga Mahith Kumar'),
+    ('23X41A4432', 'Kodhati Sri Lalitha'),
+    ('23X41A4433', 'K. Harshitha Chowdary'),
+    ('23X41A4434', 'Kothapalli Komali'),
+    ('23X41A4435', 'M. L. Venkata Sai Lakshmi'),
+    ('23X41A4437', 'Md Shaziya Tarannum'),
+    ('23X41A4438', 'Miriyala Bala Swaritha'),
+    ('23X41A4439', 'Mohammed Mustafa'),
+    ('23X41A4441', 'M Bayazeed Babu'),
+    ('23X41A4442', 'Nandyala Iswarya'),
+    ('23X41A4444', 'Rajavarapu Nandini Devi'),
+    ('23X41A4445', 'R. Chaitanya Lakshmi'),
+    ('23X41A4446', 'Sambangi Poornima'),
+    ('23X41A4447', 'Sambravu Abhiram'),
+    ('23X41A4448', 'Seelam Sneha'),
+    ('23X41A4450', 'Shaik Nowshiya'),
+    ('23X41A4451', 'Shaik Saleem'),
+    ('23X41A4452', 'Shaik Zakeer Hussain'),
+    ('23X41A4453', 'Srinancharaiah Naidu G'),
+    ('23X41A4454', 'Sunkara Venkata Renu Gopal'),
+    ('23X41A4455', 'Surapaneni Aasritha'),
+    ('23X41A4456', 'Suriboina Venkata Mokshagna'),
+    ('23X41A4457', 'Syed Sahil Samad'),
+    ('23X41A4459', 'T. Jahanavi'),
+    ('23X41A4460', 'Tatikayala Maharshi'),
+    ('23X41A4461', 'Thota Leela Vardhan'),
+    ('23X41A4462', 'Tiruvayepati Harshi'),
+    ('23X41A4464', 'Vemuri Gopi'),
+    ('23X41A4465', 'Vinukonda Haseena'),
+    ('23X41A4466', 'Yarroju Susritha'),
+    ('24X45A4401', 'Basireddy Aswini'),
+    ('24X45A4402', 'Damerla Sai Geethika'),
+    ('24X45A4403', 'Kavuri Rakesh'),
+    ('24X45A4404', 'Kota Sridhar'),
+    ('24X45A4406', 'Nunna Venkata Sai Manikanta'),
 ],
 }
 
@@ -579,15 +563,18 @@ def init_db():
         except sqlite3.OperationalError: pass
     pw=hashlib.sha256('Admin123@321'.encode()).hexdigest()
     c.execute('INSERT OR IGNORE INTO users(username,password_hash,display_name) VALUES(?,?,?)',('DATA SCIENCE',pw,'Data Science Faculty'))
+    # Keep the small Year-1 demo list, and load the supplied Years 2-4 lists.
+    for year in (1,):
+        for section in ('A','B'):
+            for roll,name in SEED_STUDENTS:
+                c.execute('INSERT OR IGNORE INTO students(roll_no,name,year,section) VALUES(?,?,?,?)',(roll,name,year,section))
     for (year, section), roster in STUDENT_DATA.items():
         for roll, name in roster:
             c.execute(
                 'INSERT OR IGNORE INTO students(roll_no,name,year,section) VALUES(?,?,?,?)',
                 (roll, name, year, section)
             )
-
-    c.commit()
-    c.close()
+    c.commit(); c.close()
 
 def get_timetable(year, section, day=None):
     if year not in TT or section not in TT[year]: return []
@@ -610,16 +597,42 @@ def get_timetable(year, section, day=None):
                         'slot_index':idx,'session_key_base':f"{year}-{section}-{d}-{idx}"})
     return out
 
+def today_code(now=None):
+    now = now or india_now()
+    return ['MON','TUE','WED','THU','FRI','SAT','SUN'][now.weekday()]
+
+def today_sessions(year, section, now=None):
+    now = now or india_now()
+    day = today_code(now)
+    if day == 'SUN':
+        return []
+    return get_timetable(year, section, day)
+
 def current_session(year, section, now=None):
-    now = now or datetime.now()
-    # Sunday is a college holiday.
-    day = ['MON','TUE','WED','THU','FRI','SAT','SUN'][now.weekday()]
-    if day == 'SUN': return None
-    hm=now.strftime('%H:%M')
-    for x in get_timetable(year,section,day):
+    now = now or india_now()
+    hm = now.strftime('%H:%M')
+    for x in today_sessions(year, section, now):
         if x['start_time'] <= hm < x['end_time']:
             return x
     return None
+
+def college_window(year, section, now=None):
+    sessions = today_sessions(year, section, now)
+    if not sessions:
+        return None, None
+    return min(x['start_time'] for x in sessions), max(x['end_time'] for x in sessions)
+
+def attendance_day_open(year, section, now=None):
+    now = now or india_now()
+    opens, closes = college_window(year, section, now)
+    if not opens or not closes:
+        return False, 'No classes are scheduled today.'
+    hm = now.strftime('%H:%M')
+    if hm < opens:
+        return False, f'Attendance opens at {opens} IST.'
+    if hm >= closes:
+        return False, f'College attendance is locked after {closes} IST.'
+    return True, ''
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self,*args,**kwargs): super().__init__(*args,directory=ROOT,**kwargs)
@@ -636,31 +649,57 @@ class Handler(SimpleHTTPRequestHandler):
             ok=bool(u and hmac.compare_digest(u['password_hash'],hashlib.sha256(str(x.get('password','')).encode()).hexdigest()))
             return self.send_json({'ok':ok,'display_name':u['display_name'] if ok else None},200 if ok else 401)
         if p.path=='/api/attendance':
-            try: year=int(x.get('year',0))
-            except: year=0
-            section=x.get('section'); records=x.get('records',[]); submitted_by=str(x.get('submitted_by','DATA SCIENCE')).strip() or 'DATA SCIENCE'
-            if year not in range(2,5) or section not in ('A','B'): return self.send_json({'error':'Timetable attendance is enabled for Years 2–4 only.'},400)
-            now=datetime.now(); today=now.strftime('%Y-%m-%d'); session=current_session(year,section,now)
-            if not session: return self.send_json({'error':'Attendance is not open right now. Attendance can only be submitted during the scheduled timetable session.'},409)
-            key=f"{today}|{year}|{section}|{session['day']}|{session['slot_index']}"
+            try:
+                year=int(x.get('year',0))
+            except Exception:
+                year=0
+            section=str(x.get('section','')).strip().upper()
+            records=x.get('records',[])
+            submitted_by=str(x.get('submitted_by','DATA SCIENCE')).strip() or 'DATA SCIENCE'
+            if year not in range(2,5) or section not in ('A','B'):
+                return self.send_json({'error':'Attendance is enabled for Years 2–4.'},400)
+            now=india_now(); today=now.strftime('%Y-%m-%d')
+            ok,reason=attendance_day_open(year,section,now)
+            if not ok:
+                return self.send_json({'error':reason},409)
+            session_key=str(x.get('session_key','')).strip()
+            session=None
+            for item in today_sessions(year,section,now):
+                key=f"{today}|{year}|{section}|{item['day']}|{item['slot_index']}"
+                if key==session_key:
+                    session=item
+                    break
+            if not session:
+                session=current_session(year,section,now)
+                if session:
+                    session_key=f"{today}|{year}|{section}|{session['day']}|{session['slot_index']}"
+            if not session:
+                return self.send_json({'error':'Select a valid period from today’s timetable.'},400)
             c=db()
             try:
-                exists=c.execute('SELECT id,submitted_at FROM attendance_sessions WHERE session_key=?',(key,)).fetchone()
-                if exists: return self.send_json({'error':f"Attendance for {session['subject_name']} is already submitted for this session at {exists['submitted_at']}. It cannot be submitted again."},409)
+                exists=c.execute('SELECT id FROM attendance_sessions WHERE session_key=?',(session_key,)).fetchone()
+                if exists:
+                    return self.send_json({'error':f"Attendance for {session['subject_name']} is already submitted for this session."},409)
                 c.execute('''INSERT INTO attendance_sessions(attendance_date,year,section,day_code,session_key,subject_code,subject_name,faculty_name,start_time,end_time,periods,submitted_at,submitted_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                    (today,year,section,session['day'],key,session['subject_code'],session['subject_name'],session['faculty_name'],session['start_time'],session['end_time'],','.join(map(str,session['periods'])),now.isoformat(timespec='seconds'),submitted_by))
+                    (today,year,section,session['day'],session_key,session['subject_code'],session['subject_name'],session['faculty_name'],session['start_time'],session['end_time'],','.join(map(str,session['periods'])),now.isoformat(timespec='seconds'),submitted_by))
                 sid=c.lastrowid
+                saved=0
                 for r in records:
-                    st=c.execute('SELECT id FROM students WHERE roll_no=? AND year=? AND section=?',(str(r.get('roll_no')),year,section)).fetchone()
-                    if st:
-                        status=str(r.get('status','present' if r.get('present') else 'absent')).lower()
-                        if status not in ('present','absent','late','leave'): status='absent'
-                        c.execute('INSERT INTO attendance_records(session_id,student_id,status) VALUES(?,?,?)',(sid,st['id'],status))
+                    st=c.execute('SELECT id FROM students WHERE roll_no=? AND year=? AND section=?',(str(r.get('roll_no','')).strip(),year,section)).fetchone()
+                    if not st:
+                        continue
+                    status=str(r.get('status','present' if r.get('present') else 'absent')).lower()
+                    if status not in ('present','absent','late','leave'):
+                        status='absent'
+                    c.execute('INSERT INTO attendance_records(session_id,student_id,status) VALUES(?,?,?)',(sid,st['id'],status))
+                    saved += 1
                 c.commit()
-                return self.send_json({'ok':True,'session_id':sid,'subject_name':session['subject_name'],'faculty_name':session['faculty_name'],'time_label':session['time_label'],'saved':len(records),'submitted_at':now.isoformat(timespec='seconds')})
-            except sqlite3.IntegrityError as e:
-                c.rollback(); return self.send_json({'error':'This attendance session has already been submitted.'},409)
-            finally: c.close()
+                return self.send_json({'ok':True,'session_id':sid,'session_key':session_key,'subject_name':session['subject_name'],'faculty_name':session['faculty_name'],'time_label':session['time_label'],'saved':saved,'submitted_at':now.isoformat(timespec='seconds')})
+            except sqlite3.IntegrityError:
+                c.rollback()
+                return self.send_json({'error':'This attendance session has already been submitted.'},409)
+            finally:
+                c.close()
         return self.send_json({'error':'Not found'},404)
     def do_GET(self):
         p=urlparse(self.path); q=parse_qs(p.query)
@@ -677,15 +716,27 @@ class Handler(SimpleHTTPRequestHandler):
             if p.path=='/api/timetable':
                 year=int(q.get('year',['2'])[0]); section=q.get('section',['A'])[0]; day=q.get('day',[None])[0]
                 return self.send_json({'year':year,'section':section,'holiday':'Sunday','slots':get_timetable(year,section,day)})
+            if p.path=='/api/today-sessions':
+                year=int(q.get('year',['2'])[0]); section=q.get('section',['A'])[0].upper()
+                now=india_now(); today=now.strftime('%Y-%m-%d'); day=today_code(now); hm=now.strftime('%H:%M')
+                opens,closes=college_window(year,section,now)
+                window_open,_=attendance_day_open(year,section,now)
+                result=[]
+                for s in today_sessions(year,section,now):
+                    key=f"{today}|{year}|{section}|{s['day']}|{s['slot_index']}"
+                    done=c.execute('SELECT id,submitted_at,submitted_by FROM attendance_sessions WHERE session_key=?',(key,)).fetchone()
+                    result.append(dict(s,session_key=key,session_id=done['id'] if done else None,already_submitted=bool(done),submitted=dict(done) if done else None,is_current=s['start_time']<=hm<s['end_time'],can_submit=bool(window_open and not done)))
+                return self.send_json({'date':today,'day':day,'day_name':DAY_NAMES[day],'india_time':now.strftime('%H:%M:%S'),'college_open':opens,'college_close':closes,'attendance_window_open':window_open,'sessions':result})
             if p.path=='/api/current-session':
                 year=int(q.get('year',['0'])[0]); section=q.get('section',['A'])[0]
                 s=current_session(year,section)
                 if not s:
-                    now=datetime.now(); day=['MON','TUE','WED','THU','FRI','SAT','SUN'][now.weekday()]
-                    return self.send_json({'open':False,'holiday':day=='SUN','day':day,'day_name':DAY_NAMES[day]})
-                today=datetime.now().strftime('%Y-%m-%d'); key=f"{today}|{year}|{section}|{s['day']}|{s['slot_index']}"
+                    day=today_code(now); opens,closes=college_window(year,section,now); window_open,_=attendance_day_open(year,section,now)
+                    return self.send_json({'open':False,'attendance_window_open':window_open,'holiday':day=='SUN','day':day,'day_name':DAY_NAMES[day],'college_open':opens,'college_close':closes})
+                today=india_now().strftime('%Y-%m-%d'); key=f"{today}|{year}|{section}|{s['day']}|{s['slot_index']}"
                 done=c.execute('SELECT id,submitted_at,submitted_by FROM attendance_sessions WHERE session_key=?',(key,)).fetchone()
-                return self.send_json({'open':not bool(done),'already_submitted':bool(done),'session':dict(s, session_id=(done['id'] if done else None), session_date=today),'submitted':dict(done) if done else None})
+                opens,closes=college_window(year,section,now); window_open,_=attendance_day_open(year,section,now)
+                return self.send_json({'open':bool(window_open and not done),'attendance_window_open':window_open,'already_submitted':bool(done),'session':dict(s, session_id=(done['id'] if done else None), session_key=key, session_date=today),'submitted':dict(done) if done else None,'college_open':opens,'college_close':closes})
             if p.path=='/api/attendance':
                 year=int(q.get('year',['1'])[0]); section=q.get('section',['A'])[0]; dt=q.get('date',[''])[0]
                 session_id=q.get('session_id',[None])[0]
@@ -702,9 +753,9 @@ class Handler(SimpleHTTPRequestHandler):
             if p.path=='/api/report':
                 year=int(q.get('year',['1'])[0]); section=q.get('section',['A'])[0]
                 if year >= 2:
-                    rows=c.execute('''SELECT s.roll_no,s.name,COUNT(ar.id) sessions,SUM(CASE WHEN ar.status='present' THEN 1 ELSE 0 END) present,CASE WHEN COUNT(ar.id)=0 THEN 0 ELSE ROUND(100.0*SUM(CASE WHEN ar.status='present' THEN 1 ELSE 0 END)/COUNT(ar.id)) END percentage FROM students s LEFT JOIN attendance_records ar ON ar.student_id=s.id LEFT JOIN attendance_sessions ass ON ass.id=ar.session_id WHERE s.year=? AND s.section=? AND (ar.id IS NULL OR (ass.year=? AND ass.section=?)) GROUP BY s.id ORDER BY s.roll_no''',(year,section,year,section)).fetchall()
+                    rows=c.execute('''SELECT s.roll_no,s.name,COUNT(ar.id) sessions,SUM(CASE WHEN ar.status='present' THEN 1 ELSE 0 END) present,SUM(CASE WHEN ar.status='absent' THEN 1 ELSE 0 END) absent,CASE WHEN COUNT(ar.id)=0 THEN 0 ELSE ROUND(100.0*SUM(CASE WHEN ar.status='present' THEN 1 ELSE 0 END)/COUNT(ar.id),2) END percentage FROM students s LEFT JOIN attendance_records ar ON ar.student_id=s.id LEFT JOIN attendance_sessions ass ON ass.id=ar.session_id WHERE s.year=? AND s.section=? AND (ar.id IS NULL OR (ass.year=? AND ass.section=?)) GROUP BY s.id ORDER BY s.roll_no''',(year,section,year,section)).fetchall()
                 else:
-                    rows=c.execute('''SELECT s.roll_no,s.name,COUNT(a.id) sessions,COALESCE(SUM(a.present),0) present,CASE WHEN COUNT(a.id)=0 THEN 0 ELSE ROUND(100.0*SUM(a.present)/COUNT(a.id)) END percentage FROM students s LEFT JOIN attendance a ON a.student_id=s.id WHERE s.year=? AND s.section=? GROUP BY s.id ORDER BY s.roll_no''',(year,section)).fetchall()
+                    rows=c.execute('''SELECT s.roll_no,s.name,COUNT(a.id) sessions,COALESCE(SUM(a.present),0) present,COALESCE(COUNT(a.id)-SUM(a.present),0) absent,CASE WHEN COUNT(a.id)=0 THEN 0 ELSE ROUND(100.0*SUM(a.present)/COUNT(a.id),2) END percentage FROM students s LEFT JOIN attendance a ON a.student_id=s.id WHERE s.year=? AND s.section=? GROUP BY s.id ORDER BY s.roll_no''',(year,section)).fetchall()
                 return self.send_json([dict(r) for r in rows])
             if p.path=='/api/dashboard':
                 out=[]
@@ -722,6 +773,6 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__=='__main__':
     init_db()
-    port = int(os.environ.get("PORT", 10000))
-    print(f"CSD Attendance running on 0.0.0.0:{port}")
-    ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
+    port = int(os.environ.get('PORT', 10000))
+    print(f'CSD Attendance running on 0.0.0.0:{port}')
+    ThreadingHTTPServer(('0.0.0.0', port), Handler).serve_forever()
