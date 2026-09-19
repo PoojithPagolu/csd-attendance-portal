@@ -698,6 +698,9 @@ class Handler(SimpleHTTPRequestHandler):
             except sqlite3.IntegrityError:
                 c.rollback()
                 return self.send_json({'error':'This attendance session has already been submitted.'},409)
+            except Exception as e:
+                c.rollback()
+                return self.send_json({'error':f'Attendance save failed: {e}'},500)
             finally:
                 c.close()
         return self.send_json({'error':'Not found'},404)
@@ -728,14 +731,18 @@ class Handler(SimpleHTTPRequestHandler):
                     result.append(dict(s,session_key=key,session_id=done['id'] if done else None,already_submitted=bool(done),submitted=dict(done) if done else None,is_current=s['start_time']<=hm<s['end_time'],can_submit=bool(window_open and not done)))
                 return self.send_json({'date':today,'day':day,'day_name':DAY_NAMES[day],'india_time':now.strftime('%H:%M:%S'),'college_open':opens,'college_close':closes,'attendance_window_open':window_open,'sessions':result})
             if p.path=='/api/current-session':
-                year=int(q.get('year',['0'])[0]); section=q.get('section',['A'])[0]
-                s=current_session(year,section)
+                year=int(q.get('year',['0'])[0]); section=q.get('section',['A'])[0].upper()
+                now=india_now()
+                s=current_session(year,section,now)
                 if not s:
-                    day=today_code(now); opens,closes=college_window(year,section,now); window_open,_=attendance_day_open(year,section,now)
+                    day=today_code(now)
+                    opens,closes=college_window(year,section,now)
+                    window_open,_=attendance_day_open(year,section,now)
                     return self.send_json({'open':False,'attendance_window_open':window_open,'holiday':day=='SUN','day':day,'day_name':DAY_NAMES[day],'college_open':opens,'college_close':closes})
-                today=india_now().strftime('%Y-%m-%d'); key=f"{today}|{year}|{section}|{s['day']}|{s['slot_index']}"
+                today=now.strftime('%Y-%m-%d'); key=f"{today}|{year}|{section}|{s['day']}|{s['slot_index']}"
                 done=c.execute('SELECT id,submitted_at,submitted_by FROM attendance_sessions WHERE session_key=?',(key,)).fetchone()
-                opens,closes=college_window(year,section,now); window_open,_=attendance_day_open(year,section,now)
+                opens,closes=college_window(year,section,now)
+                window_open,_=attendance_day_open(year,section,now)
                 return self.send_json({'open':bool(window_open and not done),'attendance_window_open':window_open,'already_submitted':bool(done),'session':dict(s, session_id=(done['id'] if done else None), session_key=key, session_date=today),'submitted':dict(done) if done else None,'college_open':opens,'college_close':closes})
             if p.path=='/api/attendance':
                 year=int(q.get('year',['1'])[0]); section=q.get('section',['A'])[0]; dt=q.get('date',[''])[0]
@@ -769,7 +776,10 @@ class Handler(SimpleHTTPRequestHandler):
                         out.append({'year':y,'section':sec,'sessions':sessions,'present':present,'percentage':round(100*present/sessions) if sessions else 0})
                 return self.send_json(out)
             return self.send_json({'error':'Not found'},404)
-        finally: c.close()
+        except Exception as e:
+            return self.send_json({'error':f'Server error: {e}'},500)
+        finally:
+            c.close()
 
 if __name__=='__main__':
     init_db()
