@@ -8,7 +8,6 @@ INDIA_TZ = ZoneInfo("Asia/Kolkata")
 
 def india_now():
     return datetime.now(INDIA_TZ)
-
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(ROOT, 'attendance.db')
 
@@ -561,11 +560,7 @@ def init_db():
         except sqlite3.OperationalError: pass
     pw=hashlib.sha256('Admin123@321'.encode()).hexdigest()
     c.execute('INSERT OR IGNORE INTO users(username,password_hash,display_name) VALUES(?,?,?)',('DATA SCIENCE',pw,'Data Science Faculty'))
-    # Keep the small Year-1 demo list, and load the supplied Years 2-4 lists.
-    for year in (1,):
-        for section in ('A','B'):
-            for roll,name in SEED_STUDENTS:
-                c.execute('INSERT OR IGNORE INTO students(roll_no,name,year,section) VALUES(?,?,?,?)',(roll,name,year,section))
+    # Load the supplied Years 2-4 student lists.
     for (year, section), roster in STUDENT_DATA.items():
         for roll, name in roster:
             c.execute(
@@ -705,9 +700,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json({'error':'Not found'},404)
         finally: c.close()
 
-if __name__=='__main__':
-   import os
-init_db()
-port = int(os.environ.get("PORT", 8000))
-print(f"CSD Attendance running on port {port}")
-ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
+if __name__ == '__main__':
+    init_db()
+    port = int(os.environ.get('PORT', 10000))
+    print(f'CSD Attendance running on 0.0.0.0:{port}')
+    ThreadingHTTPServer(('0.0.0.0', port), Handler).serve_forever()
