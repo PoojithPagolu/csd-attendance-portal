@@ -41,7 +41,6 @@ function updateLiveClock() {
 
   const india = getIndiaTime();
 
-  /* Login page clock */
   const loginTime = document.getElementById("loginTime");
   const loginDate = document.getElementById("loginDate");
 
@@ -53,8 +52,6 @@ function updateLiveClock() {
     loginDate.textContent = india.date;
   }
 
-
-  /* Main application clock */
   const appTime = document.getElementById("appTime");
   const appDate = document.getElementById("appDate");
 
@@ -68,14 +65,9 @@ function updateLiveClock() {
 }
 
 
-/* Start live clock */
 document.addEventListener("DOMContentLoaded", function () {
-
   updateLiveClock();
-
-  /* Update every second */
   setInterval(updateLiveClock, 1000);
-
 });
 
 
@@ -161,7 +153,9 @@ async function loadAttendance(sessionId = null) {
   const y = state.year?.id || 2;
   const sec = state.section || "A";
 
-  const sid = sessionId || state.session?.session_id;
+  const sid =
+    sessionId ||
+    state.session?.session_id;
 
   const url = sid
     ? `/api/attendance?year=${y}&section=${sec}&date=${state.selectedDate}&session_id=${sid}`
@@ -193,10 +187,11 @@ const state = {
   view: "home",
   attendance: {},
 
-  /* Vijayawada / IST date */
   selectedDate: getIndiaTime().isoDate,
 
-  session: null
+  session: null,
+
+  selectedSession: null
 };
 
 
@@ -212,6 +207,8 @@ const content = $("#content");
 function toast(msg) {
 
   const t = $("#toast");
+
+  if (!t) return;
 
   t.textContent = msg;
 
@@ -243,7 +240,9 @@ function theme() {
 }
 
 
-if (localStorage.getItem("csdTheme") === "light") {
+if (
+  localStorage.getItem("csdTheme") === "light"
+) {
   document.body.classList.add("light");
 }
 
@@ -252,97 +251,134 @@ if (localStorage.getItem("csdTheme") === "light") {
    LOGIN CONTROLS
    ========================================================= */
 
-$("#loginTheme").onclick = theme;
+if ($("#loginTheme")) {
+  $("#loginTheme").onclick = theme;
+}
 
-$("#appTheme").onclick = theme;
-
-
-$("#showPassword").onclick = () => {
-
-  const p = $("#password");
-
-  p.type =
-    p.type === "password"
-      ? "text"
-      : "password";
-
-  $("#showPassword").textContent =
-    p.type === "password"
-      ? "◉"
-      : "◌";
-};
+if ($("#appTheme")) {
+  $("#appTheme").onclick = theme;
+}
 
 
-$("#languageSelect").onchange = () =>
-  toast("English interface selected");
+if ($("#showPassword")) {
+
+  $("#showPassword").onclick = () => {
+
+    const p = $("#password");
+
+    p.type =
+      p.type === "password"
+        ? "text"
+        : "password";
+
+    $("#showPassword").textContent =
+      p.type === "password"
+        ? "◉"
+        : "◌";
+  };
+
+}
+
+
+if ($("#languageSelect")) {
+
+  $("#languageSelect").onchange = () =>
+    toast("English interface selected");
+
+}
 
 
 /* =========================================================
    LOGIN
    ========================================================= */
 
-$("#loginForm").onsubmit = async e => {
+if ($("#loginForm")) {
 
-  e.preventDefault();
+  $("#loginForm").onsubmit = async e => {
 
-  const u = $("#username").value.trim();
+    e.preventDefault();
 
-  const p = $("#password").value;
+    const u =
+      $("#username").value.trim();
 
-  try {
+    const p =
+      $("#password").value;
 
-    const r = await api(
-      "/api/login",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          username: u,
-          password: p
-        })
-      }
-    );
+    try {
 
-    $("#loginPage").classList.add("hidden");
+      const r = await api(
+        "/api/login",
+        {
+          method: "POST",
 
-    $("#appPage").classList.remove("hidden");
+          body: JSON.stringify({
+            username: u,
+            password: p
+          })
+        }
+      );
 
-    renderHome();
+      $("#loginPage")
+        .classList
+        .add("hidden");
 
-    toast(
-      "Welcome, " + r.display_name
-    );
+      $("#appPage")
+        .classList
+        .remove("hidden");
 
-  } catch (e) {
+      renderHome();
 
-    toast(
-      "Invalid username or password"
-    );
-  }
-};
+      toast(
+        "Welcome, " +
+        r.display_name
+      );
+
+    } catch (e) {
+
+      toast(
+        "Invalid username or password"
+      );
+
+    }
+  };
+
+}
 
 
 /* =========================================================
    LOGOUT
    ========================================================= */
 
-$("#logoutBtn").onclick = () => {
+if ($("#logoutBtn")) {
 
-  $("#appPage").classList.add("hidden");
+  $("#logoutBtn").onclick = () => {
 
-  $("#loginPage").classList.remove("hidden");
+    $("#appPage")
+      .classList
+      .add("hidden");
 
-  $("#loginForm").reset();
+    $("#loginPage")
+      .classList
+      .remove("hidden");
 
-  toast("Logged out safely");
-};
+    $("#loginForm").reset();
+
+    toast("Logged out safely");
+  };
+
+}
 
 
 /* =========================================================
    MOBILE MENU
    ========================================================= */
 
-$("#mobileMenu").onclick = () =>
-  $(".sidebar").classList.toggle("open");
+if ($("#mobileMenu")) {
+
+  $("#mobileMenu").onclick = () =>
+    $(".sidebar")?.classList.toggle("open");
+
+}
 
 
 /* =========================================================
@@ -352,36 +388,52 @@ $("#mobileMenu").onclick = () =>
 document.addEventListener("click", e => {
 
   const action =
-    e.target.closest("[data-action]")
+    e.target
+      .closest("[data-action]")
       ?.dataset.action;
 
-  if (action) {
+  if (!action) return;
 
-    $(".sidebar")?.classList.remove("open");
+  $(".sidebar")
+    ?.classList
+    .remove("open");
 
-    if (action === "home")
+
+  if (action === "home") {
+    renderHome();
+  }
+
+
+  if (action === "attendance") {
+
+    if (!state.year) {
       renderHome();
-
-    if (action === "attendance") {
-
-      if (!state.year)
-        renderHome();
-      else
-        renderAttendance();
+    } else {
+      renderAttendance();
     }
 
-    if (action === "history")
-      renderHistory();
-
-    if (action === "students")
-      renderStudents();
-
-    if (action === "timetable")
-      renderTimetable();
-
-    if (action === "reports")
-      renderReports();
   }
+
+
+  if (action === "history") {
+    renderHistory();
+  }
+
+
+  if (action === "students") {
+    renderStudents();
+  }
+
+
+  if (action === "timetable") {
+    renderTimetable();
+  }
+
+
+  if (action === "reports") {
+    renderReports();
+  }
+
 });
 
 
@@ -389,20 +441,25 @@ function nav(active) {
 
   document
     .querySelectorAll(".nav-item")
-    .forEach(n =>
+    .forEach(n => {
+
       n.classList.toggle(
         "active",
         n.dataset.action === active
-      )
-    );
+      );
+
+    });
+
 }
 
 
 function header(title, crumb = title) {
 
-  $("#pageTitle").textContent = title;
+  $("#pageTitle").textContent =
+    title;
 
-  $("#pageCrumb").textContent = crumb;
+  $("#pageCrumb").textContent =
+    crumb;
 }
 
 
@@ -421,128 +478,142 @@ function renderHome() {
     "Dashboard"
   );
 
+
   content.innerHTML = `
 
-  <div class="section-head">
+    <div class="section-head">
 
-    <div>
+      <div>
 
-      <span class="eyebrow">
-        ACADEMIC CONTROL CENTER
-      </span>
-
-      <h2>
-        Choose Academic Year
-      </h2>
-
-      <p>
-        Select a year to open Section A or B
-        and manage attendance, timetable,
-        percentage and student list.
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <div class="year-grid">
-
-    ${YEARS.map(y => `
-
-      <article
-        class="year-card"
-        style="--accent:${y.color}"
-        onclick="openYear(${y.id})"
-      >
-
-        <span class="year-no">
-          YEAR 0${y.id}
+        <span class="eyebrow">
+          ACADEMIC CONTROL CENTER
         </span>
 
-        <h3>${y.name}</h3>
+        <h2>
+          Choose Academic Year
+        </h2>
 
-        <p>${y.subtitle}</p>
-
-        <div class="year-sections">
-
-          <span>SECTION A</span>
-
-          <span>SECTION B</span>
-
-        </div>
-
-        <div class="year-arrow">
-          →
-        </div>
-
-      </article>
-
-    `).join("")}
-
-  </div>
-
-
-  <div class="dashboard-blocks">
-
-    ${YEARS.map(y => `
-
-      <div
-        class="dashboard-year"
-        style="--accent:${y.color}"
-      >
-
-        <div class="dashboard-year-head">
-
-          <div>
-
-            <span class="year-no">
-              YEAR 0${y.id}
-            </span>
-
-            <h3>${y.name}</h3>
-
-          </div>
-
-          <button
-            class="back-btn"
-            onclick="openYear(${y.id})"
-          >
-            Open Year →
-          </button>
-
-        </div>
-
-
-        <div class="dashboard-section-row">
-
-          ${y.sections.map(s => `
-
-            <button
-              class="dashboard-section"
-              onclick="openYear(${y.id});openSection('${s}')"
-            >
-
-              <b>
-                SECTION ${s}
-              </b>
-
-              <span>
-                Attendance • Time Table •
-                Percentage • Students
-              </span>
-
-            </button>
-
-          `).join("")}
-
-        </div>
+        <p>
+          Select a year to open Section A or B
+          and manage attendance, timetable,
+          percentage and student list.
+        </p>
 
       </div>
 
-    `).join("")}
+    </div>
 
-  </div>
+
+    <div class="year-grid">
+
+      ${YEARS.map(y => `
+
+        <article
+          class="year-card"
+          style="--accent:${y.color}"
+          onclick="openYear(${y.id})"
+        >
+
+          <span class="year-no">
+            YEAR 0${y.id}
+          </span>
+
+          <h3>
+            ${y.name}
+          </h3>
+
+          <p>
+            ${y.subtitle}
+          </p>
+
+          <div class="year-sections">
+
+            <span>
+              SECTION A
+            </span>
+
+            <span>
+              SECTION B
+            </span>
+
+          </div>
+
+          <div class="year-arrow">
+            →
+          </div>
+
+        </article>
+
+      `).join("")}
+
+    </div>
+
+
+    <div class="dashboard-blocks">
+
+      ${YEARS.map(y => `
+
+        <div
+          class="dashboard-year"
+          style="--accent:${y.color}"
+        >
+
+          <div class="dashboard-year-head">
+
+            <div>
+
+              <span class="year-no">
+                YEAR 0${y.id}
+              </span>
+
+              <h3>
+                ${y.name}
+              </h3>
+
+            </div>
+
+            <button
+              class="back-btn"
+              onclick="openYear(${y.id})"
+            >
+              Open Year →
+            </button>
+
+          </div>
+
+
+          <div class="dashboard-section-row">
+
+            ${y.sections.map(s => `
+
+              <button
+                class="dashboard-section"
+                onclick="
+                  openYear(${y.id});
+                  openSection('${s}')
+                "
+              >
+
+                <b>
+                  SECTION ${s}
+                </b>
+
+                <span>
+                  Attendance • Time Table •
+                  Percentage • Students
+                </span>
+
+              </button>
+
+            `).join("")}
+
+          </div>
+
+        </div>
+
+      `).join("")}
+
+    </div>
 
   `;
 }
@@ -555,13 +626,16 @@ function renderHome() {
 window.openYear = id => {
 
   state.year =
-    YEARS.find(y => y.id === id);
+    YEARS.find(
+      y => y.id === id
+    );
 
   nav("home");
 
   header(
     state.year.name,
-    "Dashboard › " + state.year.name
+    "Dashboard › " +
+    state.year.name
   );
 
 
@@ -652,116 +726,125 @@ window.openSection = s => {
 
   content.innerHTML = `
 
-  <div class="section-head">
+    <div class="section-head">
 
-    <div>
+      <div>
 
-      <button
-        class="back-btn"
-        onclick="openYear(${state.year.id})"
-      >
-        ← Back
-      </button>
+        <button
+          class="back-btn"
+          onclick="openYear(${state.year.id})"
+        >
+          ← Back
+        </button>
 
-      <h2 style="margin-top:18px">
-        ${state.year.name} • SECTION-${s}
-      </h2>
+        <h2 style="margin-top:18px">
+          ${state.year.name}
+          • SECTION-${s}
+        </h2>
 
-      <p>
-        All controls are grouped
-        for quick faculty access.
-      </p>
+        <p>
+          All controls are grouped
+          for quick faculty access.
+        </p>
+
+      </div>
 
     </div>
 
-  </div>
 
-
-  <div
-    class="section-grid"
-    style="--accent:${state.year.color}"
-  >
-
-    <article
-      class="section-card action-card"
+    <div
+      class="section-grid"
       style="--accent:${state.year.color}"
-      onclick="renderTimetable()"
     >
 
-      <div class="icon">▦</div>
+      <article
+        class="section-card action-card"
+        style="--accent:${state.year.color}"
+        onclick="renderTimetable()"
+      >
 
-      <h3>
-        TIME TABLE
-      </h3>
+        <div class="icon">
+          ▦
+        </div>
 
-      <p>
-        View periods, subjects,
-        rooms and faculty schedule.
-      </p>
+        <h3>
+          TIME TABLE
+        </h3>
 
-    </article>
+        <p>
+          View periods, subjects,
+          rooms and faculty schedule.
+        </p>
 
-
-    <article
-      class="section-card action-card"
-      style="--accent:${state.year.color}"
-      onclick="renderAttendance()"
-    >
-
-      <div class="icon">✓</div>
-
-      <h3>
-        ATTENDANCE
-      </h3>
-
-      <p>
-        Mark present or absent
-        with fast one-click attendance.
-      </p>
-
-    </article>
+      </article>
 
 
-    <article
-      class="section-card action-card"
-      style="--accent:${state.year.color}"
-      onclick="renderReports()"
-    >
+      <article
+        class="section-card action-card"
+        style="--accent:${state.year.color}"
+        onclick="renderAttendance()"
+      >
 
-      <div class="icon">◔</div>
+        <div class="icon">
+          ✓
+        </div>
 
-      <h3>
-        STUDENT PERCENTAGE
-      </h3>
+        <h3>
+          ATTENDANCE
+        </h3>
 
-      <p>
-        View subject-wise and
-        overall attendance percentage.
-      </p>
+        <p>
+          Mark present or absent
+          with fast one-click attendance.
+        </p>
 
-    </article>
+      </article>
 
 
-    <article
-      class="section-card action-card"
-      style="--accent:${state.year.color}"
-      onclick="renderStudents()"
-    >
+      <article
+        class="section-card action-card"
+        style="--accent:${state.year.color}"
+        onclick="renderReports()"
+      >
 
-      <div class="icon">♟</div>
+        <div class="icon">
+          ◔
+        </div>
 
-      <h3>
-        STUDENT LIST
-      </h3>
+        <h3>
+          STUDENT PERCENTAGE
+        </h3>
 
-      <p>
-        Search and review every
-        student in this section.
-      </p>
+        <p>
+          View subject-wise and
+          overall attendance percentage.
+        </p>
 
-    </article>
+      </article>
 
-  </div>
+
+      <article
+        class="section-card action-card"
+        style="--accent:${state.year.color}"
+        onclick="renderStudents()"
+      >
+
+        <div class="icon">
+          ♟
+        </div>
+
+        <h3>
+          STUDENT LIST
+        </h3>
+
+        <p>
+          Search and review every
+          student in this section.
+        </p>
+
+      </article>
+
+    </div>
 
   `;
 };
@@ -770,6 +853,9 @@ window.openSection = s => {
 /* =========================================================
    ATTENDANCE
    ========================================================= */
+
+let TODAY_SESSIONS = [];
+
 
 async function renderAttendance() {
 
@@ -782,6 +868,7 @@ async function renderAttendance() {
 
   const sec =
     state.section || "A";
+
 
   header(
     "Period Attendance",
@@ -800,9 +887,9 @@ async function renderAttendance() {
         </h2>
 
         <p>
-          The supplied timetable currently
-          covers Years 2–4. Add the 1st-year
-          timetable when available.
+          The supplied timetable currently covers
+          Years 2–4. Add the 1st-year timetable
+          when available.
         </p>
 
       </div>
@@ -815,33 +902,47 @@ async function renderAttendance() {
 
   try {
 
-    const info =
+    /*
+      IMPORTANT:
+
+      This loads ALL sessions for TODAY,
+      not only the currently running session.
+    */
+
+    const data =
       await api(
-        `/api/current-session?year=${y}&section=${sec}`
+        `/api/today-sessions?year=${y}&section=${sec}`
       );
 
 
-    state.session =
-      info.session || null;
+    TODAY_SESSIONS =
+      data.sessions || [];
 
 
-    const sid =
-      info.session?.session_id || null;
+    state.selectedDate =
+      data.date ||
+      getIndiaTime().isoDate;
 
 
-    await loadAttendance(sid);
+    state.session = null;
+
+    state.selectedSession = null;
 
 
-    const s =
-      info.session;
+    /* =====================================================
+       NO CLASSES / SUNDAY
+       ===================================================== */
 
+    if (!TODAY_SESSIONS.length) {
 
-    if (!s) {
+      const holidayText =
+        String(
+          data.day_name || ""
+        ).toLowerCase() === "sunday"
 
-      const msg =
-        info.holiday
           ? "Sunday is a college holiday. No attendance can be taken today."
-          : "There is no scheduled class at this time.";
+
+          : "There are no scheduled classes for this section today.";
 
 
       content.innerHTML = `
@@ -857,12 +958,22 @@ async function renderAttendance() {
               ← Back
             </button>
 
+
             <h2 style="margin-top:18px">
-              Attendance Locked
+              Today's Attendance
             </h2>
 
+
             <p>
-              ${msg}
+
+              ${data.day_name || "Today"}
+
+              • ${data.date || state.selectedDate}
+
+              • Year ${y}
+
+              • Section ${sec}
+
             </p>
 
           </div>
@@ -873,21 +984,23 @@ async function renderAttendance() {
         <div class="session-lock-card">
 
           <div class="lock-icon">
-            🔒
+            ☀
           </div>
 
+
           <h2>
-            Attendance is currently closed
+            No attendance sessions today
           </h2>
 
+
           <p>
-            Attendance opens automatically only
-            during the timetable period assigned to
-            <b>Year ${y} • Section ${sec}</b>.
+            ${holidayText}
           </p>
 
+
           <div class="session-rule">
-            One scheduled session → one submission per day
+            The dashboard and other portal
+            pages remain available.
           </div>
 
         </div>
@@ -898,23 +1011,47 @@ async function renderAttendance() {
     }
 
 
-    const records =
-      STUDENTS.map((st, i) => ({
-        roll: st[0],
-        name: st[1],
-        present:
-          state.attendance[st[0]] === true
-      }));
+    /* =====================================================
+       PERIOD STATUS
+       ===================================================== */
+
+    function statusFor(session) {
+
+      if (
+        session.already_submitted
+      ) {
+
+        return {
+          cls: "locked",
+          text: "🔒 SUBMITTED"
+        };
+
+      }
 
 
-    const locked =
-      Boolean(info.already_submitted);
+      if (
+        session.can_submit
+      ) {
+
+        return {
+          cls: "open",
+          text: "🟢 OPEN"
+        };
+
+      }
 
 
-    const faculty =
-      s.faculty_name ||
-      "Faculty not specified";
+      return {
+        cls: "locked",
+        text: "🔒 CLOSED"
+      };
 
+    }
+
+
+    /* =====================================================
+       SHOW ALL PERIODS
+       ===================================================== */
 
     content.innerHTML = `
 
@@ -929,12 +1066,22 @@ async function renderAttendance() {
             ← Back
           </button>
 
+
           <h2 style="margin-top:18px">
-            ${s.subject_name}
+            Today's Period Attendance
           </h2>
 
+
           <p>
-            ${s.subject_code} • ${faculty}
+
+            ${data.day_name || "Today"}
+
+            • ${data.date || state.selectedDate}
+
+            • Year ${y}
+
+            • Section ${sec}
+
           </p>
 
         </div>
@@ -942,235 +1089,769 @@ async function renderAttendance() {
       </div>
 
 
-      <div
-        class="live-session-card"
-        style="--accent:${state.year.color}"
-      >
+      <div class="tt-note">
 
-        <div>
+        ⏱
 
-          <span class="eyebrow">
-            ${locked
-              ? "SESSION SUBMITTED"
-              : "LIVE ATTENDANCE SESSION"}
-          </span>
+        <b>
+          Attendance Control
+        </b>
 
-          <h3>
-            ${s.time_label}
-          </h3>
+        <br>
 
-          <p>
-            <b>${s.subject_name}</b>
-            • ${faculty}
-            • Periods ${s.periods.join(", ")}
-          </p>
+        Today's periods are shown below.
 
-        </div>
+        Unsubmitted periods can be opened
+        during the college attendance window.
 
+        Submitted periods remain locked.
 
-        <div
-          class="session-status ${locked ? "locked" : "open"}"
-        >
-          ${locked
-            ? "🔒 Locked"
-            : "● OPEN NOW"}
-        </div>
+        After college closes, all unsubmitted
+        periods become CLOSED.
 
       </div>
 
 
-      <div class="attendance-toolbar">
-
-        <input
-          id="studentSearch"
-          class="search"
-          placeholder="⌕ Search student by name or roll no..."
-          oninput="filterStudents()"
-          ${locked ? "disabled" : ""}
-        >
+      <div class="attendance-period-list">
 
 
-        <button
-          class="tool-btn present-all"
-          onclick="markAll(true)"
-          ${locked ? "disabled" : ""}
-        >
-          ✓ Select All Present
-        </button>
+        ${TODAY_SESSIONS.map(
+          (session, index) => {
+
+            const status =
+              statusFor(session);
 
 
-        <button
-          class="tool-btn absent-all"
-          onclick="markAll(false)"
-          ${locked ? "disabled" : ""}
-        >
-          × Mark All Absent
-        </button>
-
-      </div>
-
-
-      <div class="attendance-layout">
-
-        <div>
-
-          <div class="attendance-card">
-
-            <div class="attendance-head">
-
-              <span>#</span>
-
-              <span>Roll No.</span>
-
-              <span>Student Name</span>
-
-              <span>Present</span>
-
-            </div>
-
-
-            <div id="studentRows">
-
-              ${records
-                .map((r, i) =>
-                  rowHTML(r, i, locked)
+            const periods =
+              (session.periods || [])
+                .map(
+                  p => "P" + p
                 )
-                .join("")}
-
-            </div>
-
-          </div>
+                .join(" + ");
 
 
-          <div class="save-bar">
-
-            <div>
-
-              <span style="color:var(--green)">
-                Present
-              </span>
-
-              <strong>
-                ${countPresent()}
-              </strong>
-
-              &nbsp;
-
-              <span style="color:var(--red)">
-                Absent
-              </span>
-
-              <strong>
-                ${STUDENTS.length - countPresent()}
-              </strong>
-
-            </div>
+            const currentClass =
+              session.is_current
+                ? " current-period"
+                : "";
 
 
-            ${
-              locked
-
-                ? `<div class="locked-note">
-                    ✓ Submitted once • Further submissions blocked
-                   </div>`
-
-                : `<button
-                     class="save-btn"
-                     onclick="saveAttendance()"
-                   >
-                     ▣ Submit Attendance
-                   </button>`
-            }
-
-          </div>
-
-        </div>
+            const encodedKey =
+              encodeURIComponent(
+                session.session_key || ""
+              );
 
 
-        <aside class="summary-card">
-
-          <b>
-            Session Summary
-          </b>
+            const clickable =
+              session.can_submit ||
+              session.already_submitted;
 
 
-          <div class="ring">
+            return `
 
-            <div>
+              <div
 
-              <strong>
-                ${percentage()}%
-              </strong>
+                class="tt-session${currentClass}"
 
-              <span>
-                Present
-              </span>
+                ${
+                  clickable
+                    ? `onclick="
+                        openAttendanceSession(
+                          '${encodedKey}'
+                        )
+                      "`
+                    : ""
+                }
 
-            </div>
+                style="
+                  cursor:
+                  ${clickable
+                    ? "pointer"
+                    : "default"}
+                "
 
-          </div>
-
-
-          <div class="legend">
-
-            <div>
-
-              <span>
-                <i class="dot green"></i>
-                Present
-              </span>
-
-              <b>
-                ${countPresent()}
-              </b>
-
-            </div>
+              >
 
 
-            <div>
+                <div class="tt-time">
 
-              <span>
-                <i class="dot red"></i>
-                Absent
-              </span>
+                  <b>
+                    Period ${index + 1}
+                  </b>
 
-              <b>
-                ${STUDENTS.length - countPresent()}
-              </b>
+                  <br>
 
-            </div>
+                  ${
+                    session.time_label ||
+                    "Time not specified"
+                  }
 
-          </div>
+                </div>
 
 
-          <div class="keyboard-tip">
+                <div class="tt-subject">
 
-            <b>
-              Controlled by timetable
-            </b>
+                  <b>
 
-            <br>
+                    ${
+                      session.subject_name ||
+                      "Subject"
+                    }
 
-            Only the scheduled faculty session
-            can submit attendance. Duplicate
-            submissions for the same day/session
-            are blocked by the database.
+                  </b>
 
-          </div>
 
-        </aside>
+                  <span>
+
+                    ${
+                      session.subject_code ||
+                      ""
+                    }
+
+                    ${
+                      periods
+                        ? " • " + periods
+                        : ""
+                    }
+
+                  </span>
+
+
+                  <small>
+
+                    👤
+
+                    ${
+                      session.faculty_name ||
+                      "Faculty not specified"
+                    }
+
+                  </small>
+
+                </div>
+
+
+                <div
+                  class="
+                    session-status
+                    ${status.cls}
+                  "
+                >
+
+                  ${status.text}
+
+                </div>
+
+
+              </div>
+
+            `;
+
+          }
+        ).join("")}
+
 
       </div>
 
     `;
 
+
   } catch (e) {
+
+    console.error(e);
 
     toast(
       e.message ||
-      "Database connection failed"
+      "Could not load today's attendance periods"
     );
+
   }
+
+}
+
+
+/* =========================================================
+   OPEN ONE ATTENDANCE PERIOD
+   ========================================================= */
+
+window.openAttendanceSession =
+async function(encodedKey) {
+
+  const key =
+    decodeURIComponent(
+      encodedKey || ""
+    );
+
+
+  const session =
+    TODAY_SESSIONS.find(
+      s =>
+        s.session_key === key
+    );
+
+
+  if (!session) {
+
+    toast(
+      "Attendance period not found"
+    );
+
+    return;
+  }
+
+
+  /*
+    CLOSED sessions cannot be opened.
+
+    SUBMITTED sessions can be viewed.
+    OPEN sessions can be edited.
+  */
+
+  if (
+    !session.can_submit &&
+    !session.already_submitted
+  ) {
+
+    toast(
+      "This attendance period is closed."
+    );
+
+    return;
+  }
+
+
+  state.selectedSession =
+    session;
+
+
+  state.session =
+    session;
+
+
+  try {
+
+    if (session.session_id) {
+
+      /*
+        Existing submitted session.
+      */
+
+      await loadAttendance(
+        session.session_id
+      );
+
+    } else {
+
+      /*
+        New session.
+
+        Everyone starts as absent.
+        Faculty clicks students to mark present.
+      */
+
+      await loadStudents();
+
+
+      state.attendance = {};
+
+
+      STUDENTS.forEach(
+        student => {
+
+          state.attendance[
+            student[0]
+          ] = false;
+
+        }
+      );
+
+    }
+
+
+    renderAttendanceSession(
+      session
+    );
+
+
+  } catch (e) {
+
+    console.error(e);
+
+    toast(
+      e.message ||
+      "Could not open attendance"
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   ATTENDANCE STUDENT SCREEN
+   ========================================================= */
+
+function renderAttendanceSession(
+  session
+) {
+
+  const locked =
+    Boolean(
+      session.already_submitted
+    ) ||
+    !Boolean(
+      session.can_submit
+    );
+
+
+  const faculty =
+    session.faculty_name ||
+    "Faculty not specified";
+
+
+  const records =
+    STUDENTS.map(
+      st => ({
+
+        roll: st[0],
+
+        name: st[1],
+
+        present:
+          state.attendance[
+            st[0]
+          ] === true
+
+      })
+    );
+
+
+  content.innerHTML = `
+
+    <div class="section-head">
+
+      <div>
+
+        <button
+          class="back-btn"
+          onclick="renderAttendance()"
+        >
+          ← All Today's Periods
+        </button>
+
+
+        <h2 style="margin-top:18px">
+
+          ${
+            session.subject_name ||
+            "Attendance"
+          }
+
+        </h2>
+
+
+        <p>
+
+          ${
+            session.subject_code ||
+            ""
+          }
+
+          ${
+            session.subject_code
+              ? " • "
+              : ""
+          }
+
+          ${faculty}
+
+          •
+
+          ${
+            session.time_label ||
+            ""
+          }
+
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div
+      class="live-session-card"
+      style="
+        --accent:
+        ${state.year?.color || "#22d3ee"}
+      "
+    >
+
+      <div>
+
+        <span class="eyebrow">
+
+          ${
+            session.already_submitted
+
+              ? "SESSION SUBMITTED"
+
+              : locked
+
+                ? "ATTENDANCE CLOSED"
+
+                : "OPEN ATTENDANCE SESSION"
+
+          }
+
+        </span>
+
+
+        <h3>
+
+          ${
+            session.time_label ||
+            ""
+          }
+
+        </h3>
+
+
+        <p>
+
+          <b>
+
+            ${
+              session.subject_name ||
+              "Subject"
+            }
+
+          </b>
+
+          •
+
+          ${faculty}
+
+          •
+
+          Periods
+
+          ${
+            (
+              session.periods ||
+              []
+            ).join(", ")
+          }
+
+        </p>
+
+      </div>
+
+
+      <div
+        class="
+          session-status
+          ${locked
+            ? "locked"
+            : "open"}
+        "
+      >
+
+        ${
+          session.already_submitted
+
+            ? "🔒 SUBMITTED"
+
+            : locked
+
+              ? "🔒 CLOSED"
+
+              : "🟢 OPEN"
+
+        }
+
+      </div>
+
+    </div>
+
+
+    <div class="attendance-toolbar">
+
+
+      <input
+        id="studentSearch"
+        class="search"
+        placeholder="
+          ⌕ Search student by name or roll no...
+        "
+        oninput="filterStudents()"
+        ${locked ? "disabled" : ""}
+      >
+
+
+      <button
+        class="tool-btn present-all"
+        onclick="markAll(true)"
+        ${locked ? "disabled" : ""}
+      >
+
+        ✓ Select All Present
+
+      </button>
+
+
+      <button
+        class="tool-btn absent-all"
+        onclick="markAll(false)"
+        ${locked ? "disabled" : ""}
+      >
+
+        × Mark All Absent
+
+      </button>
+
+
+    </div>
+
+
+    <div class="attendance-layout">
+
+
+      <div>
+
+
+        <div class="attendance-card">
+
+
+          <div class="attendance-head">
+
+            <span>#</span>
+
+            <span>
+              Roll No.
+            </span>
+
+            <span>
+              Student Name
+            </span>
+
+            <span>
+              Present
+            </span>
+
+          </div>
+
+
+          <div id="studentRows">
+
+            ${
+              records
+                .map(
+                  (r, i) =>
+                    rowHTML(
+                      r,
+                      i,
+                      locked
+                    )
+                )
+                .join("")
+            }
+
+          </div>
+
+
+        </div>
+
+
+        <div class="save-bar">
+
+
+          <div>
+
+            <span
+              style="color:var(--green)"
+            >
+              Present
+            </span>
+
+
+            <strong>
+              ${countPresent()}
+            </strong>
+
+
+            &nbsp;
+
+
+            <span
+              style="color:var(--red)"
+            >
+              Absent
+            </span>
+
+
+            <strong>
+
+              ${
+                STUDENTS.length -
+                countPresent()
+              }
+
+            </strong>
+
+          </div>
+
+
+          ${
+            locked
+
+              ? `
+
+                <div class="locked-note">
+
+                  ${
+                    session.already_submitted
+
+                      ? "✓ Submitted once • Further submissions blocked"
+
+                      : "🔒 Attendance window closed"
+
+                  }
+
+                </div>
+
+              `
+
+              : `
+
+                <button
+                  class="save-btn"
+                  onclick="saveAttendance()"
+                >
+
+                  ▣ Submit Attendance
+
+                </button>
+
+              `
+          }
+
+
+        </div>
+
+
+      </div>
+
+
+      <aside class="summary-card">
+
+
+        <b>
+          Session Summary
+        </b>
+
+
+        <div class="ring">
+
+          <div>
+
+            <strong>
+              ${percentage()}%
+            </strong>
+
+            <span>
+              Present
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="legend">
+
+
+          <div>
+
+            <span>
+
+              <i
+                class="dot green"
+              ></i>
+
+              Present
+
+            </span>
+
+
+            <b>
+              ${countPresent()}
+            </b>
+
+          </div>
+
+
+          <div>
+
+            <span>
+
+              <i
+                class="dot red"
+              ></i>
+
+              Absent
+
+            </span>
+
+
+            <b>
+
+              ${
+                STUDENTS.length -
+                countPresent()
+              }
+
+            </b>
+
+          </div>
+
+
+        </div>
+
+
+        <div class="keyboard-tip">
+
+          <b>
+
+            ${
+              session.subject_name ||
+              "Subject"
+            }
+
+          </b>
+
+          <br>
+
+
+          ${
+            locked
+
+              ? "This session is locked and cannot be changed."
+
+              : "Attendance is open for this session."
+
+          }
+
+        </div>
+
+
+      </aside>
+
+
+    </div>
+
+  `;
+
 }
 
 
@@ -1178,7 +1859,11 @@ async function renderAttendance() {
    STUDENT ROW
    ========================================================= */
 
-function rowHTML(r, i, locked = false) {
+function rowHTML(
+  r,
+  i,
+  locked = false
+) {
 
   return `
 
@@ -1199,16 +1884,29 @@ function rowHTML(r, i, locked = false) {
 
 
       <span
-        style="display:flex;align-items:center;gap:10px"
+        style="
+          display:flex;
+          align-items:center;
+          gap:10px
+        "
       >
 
-        <span class="student-avatar">
-          ${r.name
-            .split(" ")
-            .map(x => x[0])
-            .join("")
-            .slice(0, 2)}
+        <span
+          class="student-avatar"
+        >
+
+          ${
+            r.name
+              .split(" ")
+              .map(
+                x => x[0]
+              )
+              .join("")
+              .slice(0, 2)
+          }
+
         </span>
+
 
         ${r.name}
 
@@ -1216,12 +1914,28 @@ function rowHTML(r, i, locked = false) {
 
 
       <button
-        class="check-btn ${r.present ? "checked" : ""}"
-        ${locked ? "disabled" : ""}
-        onclick="toggleStudent('${r.roll}')"
+        class="
+          check-btn
+          ${r.present
+            ? "checked"
+            : ""}
+        "
+        ${locked
+          ? "disabled"
+          : ""}
+        onclick="
+          toggleStudent('${r.roll}')
+        "
       >
-        ${r.present ? "✓" : ""}
+
+        ${
+          r.present
+            ? "✓"
+            : ""
+        }
+
       </button>
+
 
     </div>
 
@@ -1233,90 +1947,182 @@ function rowHTML(r, i, locked = false) {
    ATTENDANCE TOGGLE
    ========================================================= */
 
-window.toggleStudent = roll => {
+window.toggleStudent =
+roll => {
 
-  /*
-    The buttons are already disabled when
-    the session is locked.
+  if (
+    state.selectedSession
+      ?.already_submitted ||
 
-    Therefore we simply toggle the student.
-  */
+    !state.selectedSession
+      ?.can_submit
+  ) {
+
+    return;
+  }
+
 
   state.attendance[roll] =
     state.attendance[roll] === true
       ? false
       : true;
 
+
   renderAttendanceLocal();
 };
 
 
+/* =========================================================
+   COUNT PRESENT
+   ========================================================= */
+
 function countPresent() {
 
   return STUDENTS.filter(
-    s => state.attendance[s[0]] === true
+    s =>
+      state.attendance[
+        s[0]
+      ] === true
   ).length;
 }
 
 
+/* =========================================================
+   PERCENTAGE
+   ========================================================= */
+
 function percentage() {
 
   return STUDENTS.length
+
     ? Math.round(
         countPresent() /
         STUDENTS.length *
         100
       )
+
     : 0;
 }
 
 
+/* =========================================================
+   UPDATE ATTENDANCE SCREEN
+   ========================================================= */
+
 function renderAttendanceLocal() {
 
-  // Update student check buttons
-  document.querySelectorAll(".student-row").forEach(row => {
 
-    const button = row.querySelector(".check-btn");
+  document
+    .querySelectorAll(
+      ".student-row"
+    )
+    .forEach(row => {
 
-    if (!button || button.disabled) return;
-
-    const roll = row.dataset.roll;
-    const present = state.attendance[roll] === true;
-
-    button.classList.toggle("checked", present);
-    button.textContent = present ? "✓" : "";
-  });
+      const button =
+        row.querySelector(
+          ".check-btn"
+        );
 
 
-  // Calculate attendance
-  const present = countPresent();
-  const absent = STUDENTS.length - present;
-  const percent = percentage();
+      if (
+        !button ||
+        button.disabled
+      ) {
+        return;
+      }
 
 
-  // Update bottom Present / Absent count
-  const bar = document.querySelector(".save-bar > div");
+      const roll =
+        row.dataset.roll;
+
+
+      const present =
+        state.attendance[
+          roll
+        ] === true;
+
+
+      button.classList.toggle(
+        "checked",
+        present
+      );
+
+
+      button.textContent =
+        present
+          ? "✓"
+          : "";
+
+    });
+
+
+  const present =
+    countPresent();
+
+
+  const absent =
+    STUDENTS.length -
+    present;
+
+
+  const percent =
+    percentage();
+
+
+  const bar =
+    document.querySelector(
+      ".save-bar > div:first-child"
+    );
+
 
   if (bar) {
+
     bar.innerHTML = `
-      <span style="color:var(--green)">Present</span>
-      <strong>${present}</strong>
+
+      <span
+        style="color:var(--green)"
+      >
+        Present
+      </span>
+
+
+      <strong>
+        ${present}
+      </strong>
+
 
       &nbsp;
 
-      <span style="color:var(--red)">Absent</span>
-      <strong>${absent}</strong>
+
+      <span
+        style="color:var(--red)"
+      >
+        Absent
+      </span>
+
+
+      <strong>
+        ${absent}
+      </strong>
+
     `;
+
   }
 
 
-  // Update Session Summary
-  const summaryCard = document.querySelector(".summary-card");
+  const summaryCard =
+    document.querySelector(
+      ".summary-card"
+    );
+
 
   if (summaryCard) {
 
-    // Update percentage ring
-    const ring = summaryCard.querySelector(".ring");
+    const ring =
+      summaryCard.querySelector(
+        ".ring"
+      );
+
 
     if (ring) {
 
@@ -1326,117 +2132,115 @@ function renderAttendanceLocal() {
           var(--red) ${percent}% 100%
         )`;
 
-      const percentageText = ring.querySelector("strong");
+
+      const percentageText =
+        ring.querySelector(
+          "strong"
+        );
+
 
       if (percentageText) {
-        percentageText.textContent = `${percent}%`;
+
+        percentageText.textContent =
+          `${percent}%`;
+
       }
+
     }
 
 
-    // Update Present / Absent numbers
-    const legend = summaryCard.querySelector(".legend");
+    const legend =
+      summaryCard.querySelector(
+        ".legend"
+      );
+
 
     if (legend) {
 
       legend.innerHTML = `
+
         <div>
+
           <span>
-            <i class="dot green"></i>
+
+            <i
+              class="dot green"
+            ></i>
+
             Present
+
           </span>
 
-          <b>${present}</b>
+          <b>
+            ${present}
+          </b>
+
         </div>
+
 
         <div>
+
           <span>
-            <i class="dot red"></i>
+
+            <i
+              class="dot red"
+            ></i>
+
             Absent
+
           </span>
 
-          <b>${absent}</b>
+          <b>
+            ${absent}
+          </b>
+
         </div>
+
       `;
+
     }
+
   }
+
 }
-  document
-    .querySelectorAll(".student-row")
-    .forEach(r => {
-
-      const b =
-        r.querySelector(".check-btn");
-
-      if (b.disabled)
-        return;
-
-      const v =
-        state.attendance[
-          r.dataset.roll
-        ] === true;
-
-      b.classList.toggle(
-        "checked",
-        v
-      );
-
-      b.textContent =
-        v ? "✓" : "";
-    });
-
-
-  const bar =
-    document.querySelector(
-      ".save-bar div"
-    );
-
-
-  if (bar) {
-
-    bar.innerHTML = `
-
-      <span style="color:var(--green)">
-        Present
-      </span>
-
-      <strong>
-        ${countPresent()}
-      </strong>
-
-      &nbsp;
-
-      <span style="color:var(--red)">
-        Absent
-      </span>
-
-      <strong>
-        ${STUDENTS.length - countPresent()}
-      </strong>
-
-    `;
-  }
 
 
 /* =========================================================
    MARK ALL
    ========================================================= */
 
-window.markAll = val => {
+window.markAll =
+val => {
+
+  if (
+    state.selectedSession
+      ?.already_submitted ||
+
+    !state.selectedSession
+      ?.can_submit
+  ) {
+
+    return;
+  }
+
 
   STUDENTS.forEach(
     s =>
-      state.attendance[s[0]] =
-        val
+      state.attendance[
+        s[0]
+      ] = val
   );
 
+
   renderAttendanceLocal();
+
 
   toast(
     val
       ? "All students marked Present"
       : "All students marked Absent"
   );
+
 };
 
 
@@ -1444,25 +2248,46 @@ window.markAll = val => {
    FILTER STUDENTS
    ========================================================= */
 
-window.filterStudents = () => {
+window.filterStudents =
+() => {
 
   const q =
-    ($("#studentSearch")?.value || "")
-      .toLowerCase();
+    (
+      document
+        .getElementById(
+          "studentSearch"
+        )
+        ?.value || ""
+    )
+      .toLowerCase()
+      .trim();
 
 
   document
-    .querySelectorAll(".student-row")
+    .querySelectorAll(
+      ".student-row"
+    )
     .forEach(r => {
 
       r.style.display =
+
         (
-          r.dataset.name.includes(q) ||
-          r.dataset.roll.includes(q)
+          r.dataset.name
+            .includes(q)
+
+          ||
+
+          r.dataset.roll
+            .includes(q)
+
         )
+
           ? "grid"
+
           : "none";
+
     });
+
 };
 
 
@@ -1470,40 +2295,62 @@ window.filterStudents = () => {
    SAVE ATTENDANCE
    ========================================================= */
 
-window.saveAttendance = async () => {
+window.saveAttendance =
+async () => {
 
   try {
 
     const y =
       state.year?.id;
 
+
     const sec =
       state.section || "A";
 
 
-    const info =
-      await api(
-        `/api/current-session?year=${y}&section=${sec}`
-      );
+    const session =
+      state.selectedSession;
 
 
-    if (!info.open)
+    if (
+      !session?.session_key
+    ) {
 
       throw new Error(
-        info.already_submitted
-          ? "Attendance is already submitted for this session."
-          : "Attendance is not open right now."
+        "Please select an OPEN attendance period first."
       );
 
+    }
 
-    state.session =
-      info.session;
+
+    if (
+      session.already_submitted
+    ) {
+
+      throw new Error(
+        "Attendance is already submitted for this period."
+      );
+
+    }
+
+
+    if (
+      !session.can_submit
+    ) {
+
+      throw new Error(
+        "Attendance is closed. You can no longer submit this period."
+      );
+
+    }
 
 
     await api(
       "/api/attendance",
       {
+
         method: "POST",
+
 
         body: JSON.stringify({
 
@@ -1511,22 +2358,37 @@ window.saveAttendance = async () => {
 
           section: sec,
 
+          session_key:
+            session.session_key,
+
+
           records:
-            STUDENTS.map(s => ({
 
-              roll_no: s[0],
+            STUDENTS.map(
+              s => ({
 
-              status:
-                state.attendance[s[0]] === true
-                  ? "present"
-                  : "absent"
+                roll_no:
+                  s[0],
 
-            })),
+                status:
+
+                  state.attendance[
+                    s[0]
+                  ] === true
+
+                    ? "present"
+
+                    : "absent"
+
+              })
+            ),
+
 
           submitted_by:
             "DATA SCIENCE"
 
         })
+
       }
     );
 
@@ -1534,6 +2396,14 @@ window.saveAttendance = async () => {
     toast(
       "Attendance submitted successfully • session locked"
     );
+
+
+    state.selectedSession =
+      null;
+
+
+    state.session =
+      null;
 
 
     setTimeout(
@@ -1544,11 +2414,16 @@ window.saveAttendance = async () => {
 
   } catch (e) {
 
+    console.error(e);
+
+
     toast(
       e.message ||
       "Could not submit attendance"
     );
+
   }
+
 };
 
 
@@ -1562,8 +2437,10 @@ function renderTimetable() {
 
   state.view = "timetable";
 
+
   const y =
     state.year?.id || 2;
+
 
   const sec =
     state.section || "A";
@@ -1606,9 +2483,12 @@ function renderTimetable() {
 
     const byDay = {};
 
+
     data.slots.forEach(
       x =>
-        (byDay[x.day] ??= []).push(x)
+        (
+          byDay[x.day] ??= []
+        ).push(x)
     );
 
 
@@ -1625,15 +2505,22 @@ function renderTimetable() {
             ← Back
           </button>
 
+
           <h2 style="margin-top:18px">
             Weekly Time Table
           </h2>
 
+
           <p>
+
             ${state.year.name}
+
             • Section ${sec}
+
             • AY 2026–2027
+
             • Semester I
+
           </p>
 
         </div>
@@ -1644,6 +2531,7 @@ function renderTimetable() {
       <div class="tt-note">
 
         ⏱
+
         <b>
           Attendance follows this timetable.
         </b>
@@ -1652,6 +2540,7 @@ function renderTimetable() {
         scheduled period; labs/projects are
         treated as one continuous attendance
         session across their full block.
+
         Sunday is a college holiday.
 
       </div>
@@ -1667,91 +2556,117 @@ function renderTimetable() {
           "FRI",
           "SAT"
         ]
-        .map(d => `
 
-          <div class="tt-day">
+          .map(d => `
 
-            <div class="tt-day-head">
+            <div class="tt-day">
 
-              ${
-                data.slots.find(
-                  x => x.day === d
-                )?.day_name ||
+              <div class="tt-day-head">
 
-                ({
-                  MON: "Monday",
-                  TUE: "Tuesday",
-                  WED: "Wednesday",
-                  THU: "Thursday",
-                  FRI: "Friday",
-                  SAT: "Saturday"
-                }[d])
-              }
+                ${
+                  data.slots.find(
+                    x =>
+                      x.day === d
+                  )?.day_name ||
+
+                  ({
+                    MON: "Monday",
+                    TUE: "Tuesday",
+                    WED: "Wednesday",
+                    THU: "Thursday",
+                    FRI: "Friday",
+                    SAT: "Saturday"
+                  }[d])
+                }
+
+              </div>
+
+
+              <div class="tt-list">
+
+                ${(byDay[d] || [])
+
+                  .map(x => `
+
+                    <div
+                      class="
+                        tt-session
+                        ${
+                          x.periods.length > 1
+                            ? "lab-session"
+                            : ""
+                        }
+                      "
+                    >
+
+                      <div class="tt-time">
+
+                        ${x.time_label}
+
+                      </div>
+
+
+                      <div class="tt-subject">
+
+                        <b>
+                          ${x.subject_name}
+                        </b>
+
+
+                        <span>
+
+                          ${x.subject_code}
+
+                          •
+
+                          ${
+                            x.periods
+                              .map(
+                                p =>
+                                  "P" + p
+                              )
+                              .join(" + ")
+                          }
+
+                        </span>
+
+                      </div>
+
+
+                      <div class="tt-faculty">
+
+                        👤
+
+                        ${
+                          x.faculty_name ||
+                          "Not specified"
+                        }
+
+                      </div>
+
+                    </div>
+
+                  `)
+
+                  .join("")}
+
+              </div>
 
             </div>
 
+          `)
 
-            <div class="tt-list">
-
-              ${(byDay[d] || [])
-                .map(x => `
-
-                  <div
-                    class="tt-session ${
-                      x.periods.length > 1
-                        ? "lab-session"
-                        : ""
-                    }"
-                  >
-
-                    <div class="tt-time">
-                      ${x.time_label}
-                    </div>
+          .join("")}
 
 
-                    <div class="tt-subject">
-
-                      <b>
-                        ${x.subject_name}
-                      </b>
-
-                      <span>
-                        ${x.subject_code}
-                        •
-                        ${x.periods
-                          .map(p => "P" + p)
-                          .join(" + ")}
-                      </span>
-
-                    </div>
-
-
-                    <div class="tt-faculty">
-
-                      👤
-                      ${x.faculty_name ||
-                        "Not specified"}
-
-                    </div>
-
-                  </div>
-
-                `)
-                .join("")}
-
-            </div>
-
-          </div>
-
-        `)
-        .join("")}
-
-
-        <div class="tt-day holiday">
+        <div
+          class="tt-day holiday"
+        >
 
           <div class="tt-day-head">
             Sunday
           </div>
+
 
           <div class="holiday-box">
 
@@ -1769,6 +2684,7 @@ function renderTimetable() {
 
         </div>
 
+
       </div>
 
     `;
@@ -1780,6 +2696,7 @@ function renderTimetable() {
       "Could not load timetable"
     )
   );
+
 }
 
 
@@ -1793,16 +2710,18 @@ async function renderStudents() {
 
   state.view = "students";
 
+
   header(
     "Student List",
     "Students › All Years"
   );
 
 
-  let selectedYear =
+  const selectedYear =
     state.studentListYear || 0;
 
-  let selectedSection =
+
+  const selectedSection =
     state.studentListSection || "ALL";
 
 
@@ -1824,16 +2743,22 @@ async function renderStudents() {
             class="back-btn"
             onclick="${
               state.year
-                ? `openSection('${state.section || "A"}')`
+
+                ? `openSection(
+                    '${state.section || "A"}'
+                  )`
+
                 : `renderHome()`
             }"
           >
             ← Back
           </button>
 
+
           <h2 style="margin-top:18px">
             Student List
           </h2>
+
 
           <p>
             View and contact students across
@@ -1845,7 +2770,10 @@ async function renderStudents() {
       </div>
 
 
-      <div class="year-filter student-year-filter">
+      <div
+        class="year-filter
+        student-year-filter"
+      >
 
         <button
           class="filter-year ${
@@ -1854,7 +2782,12 @@ async function renderStudents() {
               : ""
           }"
           style="--accent:#94a3b8"
-          onclick="showStudentList(0,'${selectedSection}')"
+          onclick="
+            showStudentList(
+              0,
+              '${selectedSection}'
+            )
+          "
         >
           ALL YEARS
         </button>
@@ -1869,7 +2802,12 @@ async function renderStudents() {
                 : ""
             }"
             style="--accent:${y.color}"
-            onclick="showStudentList(${y.id},'${selectedSection}')"
+            onclick="
+              showStudentList(
+                ${y.id},
+                '${selectedSection}'
+              )
+            "
           >
             ${y.name}
           </button>
@@ -1879,9 +2817,18 @@ async function renderStudents() {
       </div>
 
 
-      <div class="year-filter student-section-filter">
+      <div
+        class="
+          year-filter
+          student-section-filter
+        "
+      >
 
-        ${["ALL", "A", "B"]
+        ${[
+          "ALL",
+          "A",
+          "B"
+        ]
           .map(sec => `
 
             <button
@@ -1892,19 +2839,32 @@ async function renderStudents() {
               }"
               style="--accent:${
                 selectedYear
+
                   ? YEARS.find(
                       y =>
-                        y.id === selectedYear
+                        y.id ===
+                        selectedYear
                     ).color
+
                   : "#94a3b8"
               }"
-              onclick="showStudentList(${selectedYear},'${sec}')"
+              onclick="
+                showStudentList(
+                  ${selectedYear},
+                  '${sec}'
+                )
+              "
             >
+
               ${
                 sec === "ALL"
+
                   ? "ALL SECTIONS"
-                  : "SECTION " + sec
+
+                  : "SECTION " +
+                    sec
               }
+
             </button>
 
           `)
@@ -1920,8 +2880,12 @@ async function renderStudents() {
           <input
             class="search"
             id="studentSearch"
-            placeholder="Search name, roll no. or phone number..."
-            oninput="filterStudentTable()"
+            placeholder="
+              Search name, roll no. or phone number...
+            "
+            oninput="
+              filterStudentTable()
+            "
           >
 
         </div>
@@ -1937,12 +2901,30 @@ async function renderStudents() {
             <tr>
 
               <th>#</th>
-              <th>Year</th>
-              <th>Section</th>
-              <th>Roll No.</th>
-              <th>Student</th>
-              <th>Phone No.</th>
-              <th>Contact</th>
+
+              <th>
+                Year
+              </th>
+
+              <th>
+                Section
+              </th>
+
+              <th>
+                Roll No.
+              </th>
+
+              <th>
+                Student
+              </th>
+
+              <th>
+                Phone No.
+              </th>
+
+              <th>
+                Contact
+              </th>
 
             </tr>
 
@@ -1951,103 +2933,125 @@ async function renderStudents() {
 
           <tbody>
 
-            ${rows.map((r, i) => {
+            ${rows.map(
+              (r, i) => {
 
-              const phone =
-                (r.phone || "").trim();
-
-              const digits =
-                phone.replace(
-                  /[^0-9+]/g,
-                  ""
-                );
-
-              const status =
-                r.phone_status ||
-                "verified";
+                const phone =
+                  (
+                    r.phone ||
+                    ""
+                  ).trim();
 
 
-              const phoneCell =
-                phone
+                const digits =
+                  phone.replace(
+                    /[^0-9+]/g,
+                    ""
+                  );
 
-                  ? `<span class="phone-value">
-                       ${phone}
-                     </span>`
 
-                  : status === "needs_verification"
+                const status =
+                  r.phone_status ||
+                  "verified";
 
-                    ? `<span class="phone-warning">
-                         Needs verification
+
+                const phoneCell =
+
+                  phone
+
+                    ? `<span class="phone-value">
+                         ${phone}
                        </span>`
 
-                    : `<span class="muted-text">
-                         Not provided
-                       </span>`;
+                    : status ===
+                      "needs_verification"
+
+                      ? `<span class="phone-warning">
+                           Needs verification
+                         </span>`
+
+                      : `<span class="muted-text">
+                           Not provided
+                         </span>`;
 
 
-              const contactCell =
-                phone
+                const contactCell =
 
-                  ? `<a
-                       class="contact-btn"
-                       href="tel:${digits}"
-                     >
-                       ☎ Call
-                     </a>`
+                  phone
 
-                  : status === "needs_verification"
+                    ? `<a
+                         class="contact-btn"
+                         href="tel:${digits}"
+                       >
+                         ☎ Call
+                       </a>`
 
-                    ? `<span class="muted-text">
-                         Verify first
-                       </span>`
+                    : status ===
+                      "needs_verification"
 
-                    : `<span class="muted-text">
-                         No number
-                       </span>`;
+                      ? `<span class="muted-text">
+                           Verify first
+                         </span>`
+
+                      : `<span class="muted-text">
+                           No number
+                         </span>`;
 
 
-              return `
+                return `
 
-                <tr>
+                  <tr>
 
-                  <td>
-                    ${i + 1}
-                  </td>
+                    <td>
+                      ${i + 1}
+                    </td>
 
-                  <td>
-                    ${
-                      YEARS.find(
-                        y =>
-                          y.id === r.year
-                      )?.name || r.year
-                    }
-                  </td>
 
-                  <td>
-                    Section ${r.section}
-                  </td>
+                    <td>
 
-                  <td>
-                    ${r.roll_no}
-                  </td>
+                      ${
+                        YEARS.find(
+                          y =>
+                            y.id ===
+                            r.year
+                        )?.name ||
+                        r.year
+                      }
 
-                  <td class="subject">
-                    ${r.name}
-                  </td>
+                    </td>
 
-                  <td>
-                    ${phoneCell}
-                  </td>
 
-                  <td>
-                    ${contactCell}
-                  </td>
+                    <td>
+                      Section
+                      ${r.section}
+                    </td>
 
-                </tr>
 
-              `;
+                    <td>
+                      ${r.roll_no}
+                    </td>
 
-            }).join("")}
+
+                    <td class="subject">
+                      ${r.name}
+                    </td>
+
+
+                    <td>
+                      ${phoneCell}
+                    </td>
+
+
+                    <td>
+                      ${contactCell}
+                    </td>
+
+                  </tr>
+
+                `;
+
+              }
+            ).join("")}
 
           </tbody>
 
@@ -2057,12 +3061,15 @@ async function renderStudents() {
 
     `;
 
+
   } catch (e) {
 
     toast(
       "Database connection failed"
     );
+
   }
+
 }
 
 
@@ -2076,13 +3083,18 @@ window.showStudentList =
       section;
 
     renderStudents();
+
   };
 
 
-window.filterStudentTable = () => {
+window.filterStudentTable =
+() => {
 
   const q =
-    ($("#studentSearch")?.value || "")
+    (
+      $("#studentSearch")
+        ?.value || ""
+    )
       .toLowerCase();
 
 
@@ -2093,13 +3105,17 @@ window.filterStudentTable = () => {
     .forEach(r => {
 
       r.style.display =
+
         r.textContent
           .toLowerCase()
           .includes(q)
+
           ? ""
+
           : "none";
 
     });
+
 };
 
 
@@ -2144,13 +3160,18 @@ function renderReports() {
       ${YEARS.map(y => `
 
         <button
-          class="filter-year ${
-            selected === y.id
-              ? "selected"
-              : ""
-          }"
+          class="
+            filter-year
+            ${
+              selected === y.id
+                ? "selected"
+                : ""
+            }
+          "
           style="--accent:${y.color}"
-          onclick="showYearReport(${y.id})"
+          onclick="
+            showYearReport(${y.id})
+          "
         >
           ${y.name}
         </button>
@@ -2165,203 +3186,257 @@ function renderReports() {
   `;
 
 
-  showYearReport(selected);
+  showYearReport(
+    selected
+  );
+
 }
 
 
 window.showYearReport =
-  async id => {
+async id => {
 
-    state.year =
-      YEARS.find(y => y.id === id);
-
-    const section =
-      state.section || "A";
-
-    let rows = [];
+  state.year =
+    YEARS.find(
+      y => y.id === id
+    );
 
 
-    try {
+  const section =
+    state.section || "A";
 
-      rows =
-        await api(
-          `/api/report?year=${id}&section=${section}`
-        );
 
-    } catch (e) {
+  let rows = [];
 
-      toast(
-        "Database connection failed"
+
+  try {
+
+    rows =
+      await api(
+        `/api/report?year=${id}&section=${section}`
       );
 
-      return;
-    }
+  } catch (e) {
+
+    toast(
+      "Database connection failed"
+    );
+
+    return;
+  }
 
 
-    const avg =
-      rows.length
+  const avg =
+    rows.length
 
-        ? Math.round(
-            rows.reduce(
-              (a, b) =>
-                a + Number(b.percentage),
-              0
-            ) / rows.length
-          )
+      ? Math.round(
 
-        : 0;
+          rows.reduce(
+            (a, b) =>
+              a +
+              Number(
+                b.percentage
+              ),
+            0
+          ) /
+          rows.length
 
+        )
 
-    const above =
-      rows.filter(
-        r => r.percentage >= 75
-      ).length;
-
-
-    const below =
-      rows.length - above;
+      : 0;
 
 
-    $("#yearReport").innerHTML = `
+  const above =
+    rows.filter(
+      r =>
+        r.percentage >= 75
+    ).length;
 
-      <div
-        class="report-year-banner"
-        style="--accent:${state.year.color}"
+
+  const below =
+    rows.length -
+    above;
+
+
+  $("#yearReport").innerHTML = `
+
+    <div
+      class="report-year-banner"
+      style="
+        --accent:
+        ${state.year.color}
+      "
+    >
+
+      <div>
+
+        <span>
+          DATABASE REPORT
+        </span>
+
+
+        <h2>
+          ${state.year.name}
+        </h2>
+
+
+        <p>
+          Section ${section}
+          • ${rows.length} students
+        </p>
+
+      </div>
+
+
+      <button
+        class="back-btn"
+        onclick="renderHome()"
+      >
+        Dashboard →
+      </button>
+
+    </div>
+
+
+    <div class="report-grid">
+
+
+      <div class="report-card">
+
+        <span>
+          Overall Attendance
+        </span>
+
+
+        <div class="big">
+          ${avg}%
+        </div>
+
+
+        <small>
+          ${state.year.name}
+        </small>
+
+
+        <div class="progress">
+
+          <i
+            style="width:${avg}%"
+          ></i>
+
+        </div>
+
+      </div>
+
+
+      <div class="report-card">
+
+        <span>
+          Above 75%
+        </span>
+
+
+        <div class="big">
+          ${above}
+        </div>
+
+
+        <small>
+          Students in good standing
+        </small>
+
+      </div>
+
+
+      <div class="report-card">
+
+        <span>
+          Below 75%
+        </span>
+
+
+        <div class="big">
+          ${below}
+        </div>
+
+
+        <small>
+          Needs faculty attention
+        </small>
+
+      </div>
+
+
+    </div>
+
+
+    <div
+      class="
+        table-card
+        report-student-table
+      "
+    >
+
+      <div class="report-table-title">
+
+        <h3>
+          ${state.year.name}
+          — Section ${section}
+        </h3>
+
+
+        <input
+          class="search"
+          id="reportSearch"
+          placeholder="
+            Search student...
+          "
+          oninput="
+            filterReportTable()
+          "
+        >
+
+      </div>
+
+
+      <table
+        class="data-table"
+        id="reportTable"
       >
 
-        <div>
+        <thead>
 
-          <span>
-            DATABASE REPORT
-          </span>
+          <tr>
 
-          <h2>
-            ${state.year.name}
-          </h2>
+            <th>
+              Roll
+            </th>
 
-          <p>
-            Section ${section}
-            • ${rows.length} students
-          </p>
+            <th>
+              Student
+            </th>
 
-        </div>
+            <th>
+              Sessions
+            </th>
 
+            <th>
+              Percentage
+            </th>
 
-        <button
-          class="back-btn"
-          onclick="renderHome()"
-        >
-          Dashboard →
-        </button>
+            <th>
+              Status
+            </th>
 
-      </div>
+          </tr>
 
-
-      <div class="report-grid">
-
-        <div class="report-card">
-
-          <span>
-            Overall Attendance
-          </span>
-
-          <div class="big">
-            ${avg}%
-          </div>
-
-          <small>
-            ${state.year.name}
-          </small>
-
-          <div class="progress">
-
-            <i
-              style="width:${avg}%"
-            ></i>
-
-          </div>
-
-        </div>
+        </thead>
 
 
-        <div class="report-card">
+        <tbody>
 
-          <span>
-            Above 75%
-          </span>
-
-          <div class="big">
-            ${above}
-          </div>
-
-          <small>
-            Students in good standing
-          </small>
-
-        </div>
-
-
-        <div class="report-card">
-
-          <span>
-            Below 75%
-          </span>
-
-          <div class="big">
-            ${below}
-          </div>
-
-          <small>
-            Needs faculty attention
-          </small>
-
-        </div>
-
-      </div>
-
-
-      <div class="table-card report-student-table">
-
-        <div class="report-table-title">
-
-          <h3>
-            ${state.year.name}
-            — Section ${section}
-          </h3>
-
-          <input
-            class="search"
-            id="reportSearch"
-            placeholder="Search student..."
-            oninput="filterReportTable()"
-          >
-
-        </div>
-
-
-        <table
-          class="data-table"
-          id="reportTable"
-        >
-
-          <thead>
-
-            <tr>
-
-              <th>Roll</th>
-              <th>Student</th>
-              <th>Sessions</th>
-              <th>Percentage</th>
-              <th>Status</th>
-
-            </tr>
-
-          </thead>
-
-
-          <tbody>
-
-            ${rows.map(r => `
+          ${rows.map(
+            r => `
 
               <tr>
 
@@ -2369,19 +3444,25 @@ window.showYearReport =
                   ${r.roll_no}
                 </td>
 
+
                 <td class="subject">
                   ${r.name}
                 </td>
+
 
                 <td>
                   ${r.sessions}
                 </td>
 
+
                 <td>
+
                   <b>
                     ${r.percentage}%
                   </b>
+
                 </td>
+
 
                 <td
                   class="${
@@ -2390,33 +3471,45 @@ window.showYearReport =
                       : "success-text"
                   }"
                 >
+
                   ${
                     r.sessions === 0
+
                       ? "No records"
+
                       : r.percentage < 75
+
                         ? "Needs attention"
+
                         : "On track"
                   }
+
                 </td>
 
               </tr>
 
-            `).join("")}
+            `
+          ).join("")}
 
-          </tbody>
+        </tbody>
 
-        </table>
+      </table>
 
-      </div>
+    </div>
 
-    `;
-  };
+  `;
+
+};
 
 
-window.filterReportTable = () => {
+window.filterReportTable =
+() => {
 
   const q =
-    ($("#reportSearch")?.value || "")
+    (
+      $("#reportSearch")
+        ?.value || ""
+    )
       .toLowerCase();
 
 
@@ -2427,13 +3520,17 @@ window.filterReportTable = () => {
     .forEach(r => {
 
       r.style.display =
+
         r.textContent
           .toLowerCase()
           .includes(q)
+
           ? ""
+
           : "none";
 
     });
+
 };
 
 
@@ -2444,6 +3541,7 @@ window.filterReportTable = () => {
 async function renderHistory() {
 
   nav("history");
+
 
   header(
     "Attendance History",
@@ -2481,6 +3579,7 @@ async function renderHistory() {
           Attendance History
         </h2>
 
+
         <p>
           Saved attendance sessions
           from the database.
@@ -2496,81 +3595,105 @@ async function renderHistory() {
       ${
         rows.length
 
-          ? rows.map(x => {
+          ? rows.map(
+              x => {
 
-              const pct =
-                x.total
-                  ? Math.round(
-                      x.present /
-                      x.total *
-                      100
-                    )
-                  : 0;
+                const pct =
+                  x.total
+
+                    ? Math.round(
+                        x.present /
+                        x.total *
+                        100
+                      )
+
+                    : 0;
 
 
-              return `
+                return `
 
-                <div class="history-item">
+                  <div
+                    class="history-item"
+                  >
 
-                  <div>
+                    <div>
 
-                    <b>
-                      ${x.date}
-                    </b>
+                      <b>
+                        ${x.date}
+                      </b>
 
-                    <div
-                      style="
-                        font-size:11px;
-                        color:var(--muted);
-                        margin-top:4px
+
+                      <div
+                        style="
+                          font-size:11px;
+                          color:var(--muted);
+                          margin-top:4px
+                        "
+                      >
+
+                        Year
+                        ${x.year}
+
+                        • Section
+                        ${x.section}
+
+                      </div>
+
+                    </div>
+
+
+                    <span class="pill">
+                      ${pct}% Present
+                    </span>
+
+
+                    <button
+                      class="back-btn"
+                      onclick="
+                        state.year =
+                          YEARS.find(
+                            y =>
+                              y.id ===
+                              ${x.year}
+                          );
+
+                        state.section =
+                          '${x.section}';
+
+                        state.selectedDate =
+                          '${x.date}';
+
+                        renderAttendance();
                       "
                     >
-                      Year ${x.year}
-                      • Section ${x.section}
-                    </div>
+                      View →
+                    </button>
+
 
                   </div>
 
+                `;
 
-                  <span class="pill">
-                    ${pct}% Present
-                  </span>
-
-
-                  <button
-                    class="back-btn"
-                    onclick="
-                      state.year=YEARS.find(
-                        y=>y.id===${x.year}
-                      );
-                      state.section='${x.section}';
-                      state.selectedDate='${x.date}';
-                      renderAttendance()
-                    "
-                  >
-                    View →
-                  </button>
-
-                </div>
-
-              `;
-
-            }).join("")
+              }
+            ).join("")
 
           : `
 
-            <div class="history-item">
+              <div
+                class="history-item"
+              >
 
-              <b>
-                No attendance saved yet.
-              </b>
+                <b>
+                  No attendance saved yet.
+                </b>
 
-            </div>
+              </div>
 
-          `
+            `
       }
 
     </div>
 
   `;
+
 }
