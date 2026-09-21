@@ -268,3 +268,14 @@ button.primary:hover {
   color: #000000 !important;
   background: #e8eef7 !important;
 }
+.download-excel-btn {
+  color: #000000 !important;
+  background: #ffffff !important;
+  border: 1px solid #000000 !important;
+  font-weight: 700 !important;
+}
+
+.download-excel-btn:hover {
+  color: #000000 !important;
+  background: #e8eef7 !important;
+}
