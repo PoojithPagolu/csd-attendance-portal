@@ -3704,3 +3704,17 @@ async function renderHistory() {
   `;
 
 }
+// =========================================================
+// DOWNLOAD EXCEL
+// =========================================================
+
+window.downloadExcel = function () {
+
+  const year = state.year?.id || 2;
+  const section = state.section || "A";
+
+  const url =
+    `/api/export.xlsx?year=${encodeURIComponent(year)}&section=${encodeURIComponent(section)}`;
+
+  window.location.href = url;
+};
