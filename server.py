@@ -677,24 +677,84 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.send_json({'error':'Select a valid period from today’s timetable.'},400)
             c=db()
             try:
-                exists=c.execute('SELECT id FROM attendance_sessions WHERE session_key=?',(session_key,)).fetchone()
+                
+                exists = c.execute(
+                    'SELECT id,submitted_at FROM attendance_sessions WHERE session_key=?',
+                    (key,)
+                ).fetchone()
+
                 if exists:
-                    return self.send_json({'error':f"Attendance for {session['subject_name']} is already submitted for this session."},409)
-                                          cur = c.execute('''INSERT INTO attendance_sessions(attendance_date,year,section,day_code,session_key,subject_code,subject_name,faculty_name,start_time,end_time,periods,submitted_at,submitted_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                    (today,year,section,session['day'],key,session['subject_code'],session['subject_name'],session['faculty_name'],session['start_time'],session['end_time'],','.join(map(str,session['periods'])),now.isoformat(timespec='seconds'),submitted_by))
+                    return self.send_json({
+                        'error': f"Attendance for {session['subject_name']} is already submitted for this session."
+                    }, 409)
+
+                cur = c.execute(
+                    '''INSERT INTO attendance_sessions(
+                        attendance_date,year,section,day_code,session_key,
+                        subject_code,subject_name,faculty_name,start_time,
+                        end_time,periods,submitted_at,submitted_by
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                    (
+                        today,
+                        year,
+                        section,
+                        session['day'],
+                        key,
+                        session['subject_code'],
+                        session['subject_name'],
+                        session['faculty_name'],
+                        session['start_time'],
+                        session['end_time'],
+                        ','.join(map(str, session['periods'])),
+                        now.isoformat(timespec='seconds'),
+                        submitted_by
+                    )
+                )
+
                 sid = cur.lastrowid
                 saved = 0
+
                 for r in records:
-                    st = c.execute('SELECT id FROM students WHERE roll_no=? AND year=? AND section=?',(str(r.get('roll_no','')).strip(),year,section)).fetchone()
+                    st = c.execute(
+                        'SELECT id FROM students WHERE roll_no=? AND year=? AND section=?',
+                        (
+                            str(r.get('roll_no', '')).strip(),
+                            year,
+                            section
+                        )
+                    ).fetchone()
+
                     if not st:
                         continue
-                    status = str(r.get('status','present' if r.get('present') else 'absent')).lower()
-                    if status not in ('present','absent','late','leave'):
+
+                    status = str(
+                        r.get(
+                            'status',
+                            'present' if r.get('present') else 'absent'
+                        )
+                    ).lower()
+
+                    if status not in ('present', 'absent', 'late', 'leave'):
                         status = 'absent'
-                    c.execute('INSERT INTO attendance_records(session_id,student_id,status) VALUES(?,?,?)',(sid,st['id'],status))
+
+                    c.execute(
+                        'INSERT INTO attendance_records(session_id,student_id,status) VALUES(?,?,?)',
+                        (sid, st['id'], status)
+                    )
+
                     saved += 1
+
                 c.commit()
-                return self.send_json({'ok':True,'session_id':sid,'session_key':session_key,'subject_name':session['subject_name'],'faculty_name':session['faculty_name'],'saved':saved,'submitted_at':now.isoformat(timespec='seconds')})
+
+                return self.send_json({
+                    'ok': True,
+                    'session_id': sid,
+                    'session_key': session_key,
+                    'subject_name': session['subject_name'],
+                    'faculty_name': session['faculty_name'],
+                    'saved': saved,
+                    'submitted_at': now.isoformat(timespec='seconds')
+                })
             except sqlite3.IntegrityError:
                 c.rollback()
                 return self.send_json({'error':'This attendance session has already been submitted.'},409)
