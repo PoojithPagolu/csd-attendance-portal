@@ -1,6 +1,9 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import sqlite3, json, os, hashlib, hmac
+from io import BytesIO
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
 
@@ -824,6 +827,151 @@ class Handler(SimpleHTTPRequestHandler):
                 else:
                     rows=c.execute('''SELECT s.roll_no,s.name,COUNT(a.id) sessions,COALESCE(SUM(a.present),0) present,COALESCE(COUNT(a.id)-SUM(a.present),0) absent,CASE WHEN COUNT(a.id)=0 THEN 0 ELSE ROUND(100.0*SUM(a.present)/COUNT(a.id),2) END percentage FROM students s LEFT JOIN attendance a ON a.student_id=s.id WHERE s.year=? AND s.section=? GROUP BY s.id ORDER BY s.roll_no''',(year,section)).fetchall()
                 return self.send_json([dict(r) for r in rows])
+            if p.path=='/api/export.xlsx':
+                year = int(q.get('year',['2'])[0])
+                section = q.get('section',['A'])[0].upper()
+
+                if year not in range(1,5):
+                    return self.send_json({'error':'Invalid year.'},400)
+
+                if section not in ('A','B','ALL'):
+                    return self.send_json({'error':'Invalid section.'},400)
+
+                if year >= 2:
+                    if section == 'ALL':
+                        rows = c.execute('''
+                            SELECT
+                                s.roll_no,
+                                s.name,
+                                COUNT(ar.id) AS sessions,
+                                COALESCE(SUM(CASE WHEN ar.status='present' THEN 1 ELSE 0 END),0) AS present,
+                                COALESCE(SUM(CASE WHEN ar.status='absent' THEN 1 ELSE 0 END),0) AS absent
+                            FROM students s
+                            LEFT JOIN attendance_records ar
+                                ON ar.student_id=s.id
+                            LEFT JOIN attendance_sessions ass
+                                ON ass.id=ar.session_id
+                                AND ass.year=s.year
+                                AND ass.section=s.section
+                            WHERE s.year=?
+                            GROUP BY s.id
+                            ORDER BY s.section,s.roll_no
+                        ''',(year,)).fetchall()
+                    else:
+                        rows = c.execute('''
+                            SELECT
+                                s.roll_no,
+                                s.name,
+                                COUNT(ar.id) AS sessions,
+                                COALESCE(SUM(CASE WHEN ar.status='present' THEN 1 ELSE 0 END),0) AS present,
+                                COALESCE(SUM(CASE WHEN ar.status='absent' THEN 1 ELSE 0 END),0) AS absent
+                            FROM students s
+                            LEFT JOIN attendance_records ar
+                                ON ar.student_id=s.id
+                            LEFT JOIN attendance_sessions ass
+                                ON ass.id=ar.session_id
+                                AND ass.year=?
+                                AND ass.section=?
+                            WHERE s.year=? AND s.section=?
+                            GROUP BY s.id
+                            ORDER BY s.roll_no
+                        ''',(year,section,year,section)).fetchall()
+                else:
+                    if section == 'ALL':
+                        rows = c.execute('''
+                            SELECT
+                                s.roll_no,
+                                s.name,
+                                COUNT(a.id) AS sessions,
+                                COALESCE(SUM(a.present),0) AS present,
+                                COALESCE(COUNT(a.id)-SUM(a.present),0) AS absent
+                            FROM students s
+                            LEFT JOIN attendance a
+                                ON a.student_id=s.id
+                            WHERE s.year=?
+                            GROUP BY s.id
+                            ORDER BY s.section,s.roll_no
+                        ''',(year,)).fetchall()
+                    else:
+                        rows = c.execute('''
+                            SELECT
+                                s.roll_no,
+                                s.name,
+                                COUNT(a.id) AS sessions,
+                                COALESCE(SUM(a.present),0) AS present,
+                                COALESCE(COUNT(a.id)-SUM(a.present),0) AS absent
+                            FROM students s
+                            LEFT JOIN attendance a
+                                ON a.student_id=s.id
+                            WHERE s.year=? AND s.section=?
+                            GROUP BY s.id
+                            ORDER BY s.roll_no
+                        ''',(year,section)).fetchall()
+
+                wb = Workbook()
+                ws = wb.active
+                ws.title = "Attendance Report"
+
+                headers = [
+                    "Roll Number",
+                    "Student Name",
+                    "Total Classes",
+                    "Present",
+                    "Absent",
+                    "Percentage"
+                ]
+
+                ws.append(headers)
+
+                for cell in ws[1]:
+                    cell.font = Font(bold=True)
+                    cell.alignment = Alignment(horizontal="center")
+
+                for r in rows:
+                    total = int(r['sessions'] or 0)
+                    present = int(r['present'] or 0)
+                    absent = int(r['absent'] or 0)
+                    percentage = (present / total * 100) if total else 0
+
+                    ws.append([
+                        r['roll_no'],
+                        r['name'],
+                        total,
+                        present,
+                        absent,
+                        percentage
+                    ])
+
+                for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):
+                    row[0].number_format = '0.00"%"'
+
+                ws.column_dimensions['A'].width = 18
+                ws.column_dimensions['B'].width = 30
+                ws.column_dimensions['C'].width = 15
+                ws.column_dimensions['D'].width = 12
+                ws.column_dimensions['E'].width = 12
+                ws.column_dimensions['F'].width = 15
+
+                output = BytesIO()
+                wb.save(output)
+                output.seek(0)
+
+                data = output.getvalue()
+
+                self.send_response(200)
+                self.send_header(
+                    'Content-Type',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+                self.send_header(
+                    'Content-Disposition',
+                    f'attachment; filename="attendance_report_year_{year}_{section}.xlsx"'
+                )
+                self.send_header('Content-Length', str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
+
             if p.path=='/api/dashboard':
                 out=[]
                 for y in range(1,5):
