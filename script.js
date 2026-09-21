@@ -3625,9 +3625,36 @@ async function renderHistory() {
 
                     <div>
 
-                      <b>
-                        ${x.date}
-                      </b>
+                     <div>
+  <b>
+    ${x.date}
+  </b>
+
+  <div style="
+    font-size:12px;
+    color:var(--muted);
+    margin-top:5px
+  ">
+    Year ${x.year} • Section ${x.section}
+  </div>
+
+  <div style="
+    font-size:13px;
+    margin-top:8px;
+    font-weight:700;
+  ">
+    📚 ${x.subject_name || "Subject"}
+  </div>
+
+  <div style="
+    font-size:12px;
+    margin-top:5px;
+    color:var(--muted);
+  ">
+    🕐 Period ${x.periods || "-"} •
+    ${x.start_time || "--:--"} – ${x.end_time || "--:--"}
+  </div>
+</div>
 
 
                       <div
