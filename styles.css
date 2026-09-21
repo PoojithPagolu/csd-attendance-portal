@@ -256,3 +256,15 @@ body.light .year-sections span{color:var(--accent)}
 .save-btn {
   color: #111827 !important;
 }
+/* Download Excel button */
+button.primary {
+  color: #000000 !important;
+  background: #ffffff !important;
+  border: 1px solid #000000 !important;
+  font-weight: 700;
+}
+
+button.primary:hover {
+  color: #000000 !important;
+  background: #e8eef7 !important;
+}
