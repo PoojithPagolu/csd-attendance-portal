@@ -3152,12 +3152,12 @@ function renderReports() {
 
       </div>
 
-      <button
-        class="primary"
-        onclick="downloadExcel()"
-      >
-        📥 Download Excel
-      </button>
+    <button
+  class="primary download-excel-btn"
+  onclick="downloadExcel()"
+>
+  📥 Download Excel
+</button>
 
     </div>
 
