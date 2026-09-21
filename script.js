@@ -3137,7 +3137,7 @@ function renderReports() {
 
   content.innerHTML = `
 
-    <div class="section-head">
+     <div class="section-head">
 
       <div>
 
@@ -3151,6 +3151,13 @@ function renderReports() {
         </p>
 
       </div>
+
+      <button
+        class="primary"
+        onclick="downloadExcel()"
+      >
+        📥 Download Excel
+      </button>
 
     </div>
 
