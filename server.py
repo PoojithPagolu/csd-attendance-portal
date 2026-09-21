@@ -680,9 +680,9 @@ class Handler(SimpleHTTPRequestHandler):
                 exists=c.execute('SELECT id FROM attendance_sessions WHERE session_key=?',(session_key,)).fetchone()
                 if exists:
                     return self.send_json({'error':f"Attendance for {session['subject_name']} is already submitted for this session."},409)
-                c.execute('''INSERT INTO attendance_sessions(attendance_date,year,section,day_code,session_key,subject_code,subject_name,faculty_name,start_time,end_time,periods,submitted_at,submitted_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                    (today,year,section,session['day'],session_key,session['subject_code'],session['subject_name'],session['faculty_name'],session['start_time'],session['end_time'],','.join(map(str,session['periods'])),now.isoformat(timespec='seconds'),submitted_by))
-                sid=c.lastrowid
+               cur = c.execute('''INSERT INTO attendance_sessions(attendance_date,year,section,day_code,session_key,subject_code,subject_name,faculty_name,start_time,end_time,periods,submitted_at,submitted_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+    (today,year,section,session['day'],key,session['subject_code'],session['subject_name'],session['faculty_name'],session['start_time'],session['end_time'],','.join(map(str,session['periods'])),now.isoformat(timespec='seconds'),submitted_by))
+sid = cur.lastrowid
                 saved=0
                 for r in records:
                     st=c.execute('SELECT id FROM students WHERE roll_no=? AND year=? AND section=?',(str(r.get('roll_no','')).strip(),year,section)).fetchone()
