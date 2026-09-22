@@ -828,6 +828,9 @@ class Handler(SimpleHTTPRequestHandler):
                     rows=c.execute('''SELECT s.roll_no,s.name,COUNT(a.id) sessions,COALESCE(SUM(a.present),0) present,COALESCE(COUNT(a.id)-SUM(a.present),0) absent,CASE WHEN COUNT(a.id)=0 THEN 0 ELSE ROUND(100.0*SUM(a.present)/COUNT(a.id),2) END percentage FROM students s LEFT JOIN attendance a ON a.student_id=s.id WHERE s.year=? AND s.section=? GROUP BY s.id ORDER BY s.roll_no''',(year,section)).fetchall()
                 return self.send_json([dict(r) for r in rows])
             if p.path=='/api/export.xlsx':
+                from openpyxl.styles import PatternFill
+                from openpyxl.utils import get_column_letter
+
                 year = int(q.get('year',['2'])[0])
                 section = q.get('section',['A'])[0].upper()
 
@@ -837,137 +840,174 @@ class Handler(SimpleHTTPRequestHandler):
                 if section not in ('A','B','ALL'):
                     return self.send_json({'error':'Invalid section.'},400)
 
+                subject_codes = list(SUBJECTS.get(year, {}).keys())
+
+                short_names = {
+                    'PYTHON LAB': 'PY LAB',
+                    'JAVA LAB': 'JAVA LAB',
+                    'IDS LAB': 'IDS LAB',
+                    'FULL STACK LAB': 'FSD LAB',
+                    'TINKERING LAB': 'TINKER',
+                    'SOFT SKILLS': 'SOFT SKILLS',
+                    'CERT COURSE': 'CERT',
+                    'COUNSEL LNG': 'COUNSEL',
+                    'FULL STACK LAB-II': 'FSD LAB-II',
+                    'MINI PROJECT': 'MINI PROJ'
+                }
+
+                excel_subjects = [short_names.get(code, code) for code in subject_codes]
+                used_names = {}
+                final_subject_names = []
+                for name in excel_subjects:
+                    if name not in used_names:
+                        used_names[name] = 1
+                        final_subject_names.append(name)
+                    else:
+                        used_names[name] += 1
+                        final_subject_names.append(f"{name} {used_names[name]}")
+
+                if section == 'ALL':
+                    students = c.execute('''
+                        SELECT id,roll_no,name,section
+                        FROM students
+                        WHERE year=?
+                        ORDER BY section,roll_no
+                    ''',(year,)).fetchall()
+                else:
+                    students = c.execute('''
+                        SELECT id,roll_no,name,section
+                        FROM students
+                        WHERE year=? AND section=?
+                        ORDER BY roll_no
+                    ''',(year,section)).fetchall()
+
+                stats = {}
+                for st in students:
+                    stats[st['id']] = {code:[0,0] for code in subject_codes}
+
                 if year >= 2:
                     if section == 'ALL':
-                        rows = c.execute('''
-                            SELECT
-                                s.roll_no,
-                                s.name,
-                                COUNT(ar.id) AS sessions,
-                                COALESCE(SUM(CASE WHEN ar.status='present' THEN 1 ELSE 0 END),0) AS present,
-                                COALESCE(SUM(CASE WHEN ar.status='absent' THEN 1 ELSE 0 END),0) AS absent
-                            FROM students s
-                            LEFT JOIN attendance_records ar
-                                ON ar.student_id=s.id
-                            LEFT JOIN attendance_sessions ass
-                                ON ass.id=ar.session_id
-                                AND ass.year=s.year
-                                AND ass.section=s.section
-                            WHERE s.year=?
-                            GROUP BY s.id
-                            ORDER BY s.section,s.roll_no
-                        ''',(year,)).fetchall()
+                        records = c.execute('''
+                            SELECT ar.student_id,ass.subject_code,ar.status
+                            FROM attendance_records ar
+                            JOIN attendance_sessions ass ON ass.id=ar.session_id
+                            JOIN students s ON s.id=ar.student_id
+                            WHERE s.year=? AND ass.year=? AND ass.section=s.section
+                            ORDER BY ar.student_id,ass.subject_code
+                        ''',(year,year)).fetchall()
                     else:
-                        rows = c.execute('''
-                            SELECT
-                                s.roll_no,
-                                s.name,
-                                COUNT(ar.id) AS sessions,
-                                COALESCE(SUM(CASE WHEN ar.status='present' THEN 1 ELSE 0 END),0) AS present,
-                                COALESCE(SUM(CASE WHEN ar.status='absent' THEN 1 ELSE 0 END),0) AS absent
-                            FROM students s
-                            LEFT JOIN attendance_records ar
-                                ON ar.student_id=s.id
-                            LEFT JOIN attendance_sessions ass
-                                ON ass.id=ar.session_id
-                                AND ass.year=?
-                                AND ass.section=?
-                            WHERE s.year=? AND s.section=?
-                            GROUP BY s.id
-                            ORDER BY s.roll_no
+                        records = c.execute('''
+                            SELECT ar.student_id,ass.subject_code,ar.status
+                            FROM attendance_records ar
+                            JOIN attendance_sessions ass ON ass.id=ar.session_id
+                            JOIN students s ON s.id=ar.student_id
+                            WHERE s.year=? AND s.section=? AND ass.year=? AND ass.section=?
+                            ORDER BY ar.student_id,ass.subject_code
                         ''',(year,section,year,section)).fetchall()
+
+                    for r in records:
+                        sid = r['student_id']
+                        code = r['subject_code']
+                        if sid not in stats:
+                            continue
+                        if code not in stats[sid]:
+                            stats[sid][code] = [0,0]
+                        stats[sid][code][1] += 1
+                        if str(r['status']).lower() == 'present':
+                            stats[sid][code][0] += 1
                 else:
+                    subject_codes = ['GENERAL']
+                    final_subject_names = ['GENERAL']
+                    for st in students:
+                        stats[st['id']] = {'GENERAL':[0,0]}
+
                     if section == 'ALL':
-                        rows = c.execute('''
-                            SELECT
-                                s.roll_no,
-                                s.name,
-                                COUNT(a.id) AS sessions,
-                                COALESCE(SUM(a.present),0) AS present,
-                                COALESCE(COUNT(a.id)-SUM(a.present),0) AS absent
-                            FROM students s
-                            LEFT JOIN attendance a
-                                ON a.student_id=s.id
+                        old_rows = c.execute('''
+                            SELECT a.student_id,a.present
+                            FROM attendance a
+                            JOIN students s ON s.id=a.student_id
                             WHERE s.year=?
-                            GROUP BY s.id
-                            ORDER BY s.section,s.roll_no
                         ''',(year,)).fetchall()
                     else:
-                        rows = c.execute('''
-                            SELECT
-                                s.roll_no,
-                                s.name,
-                                COUNT(a.id) AS sessions,
-                                COALESCE(SUM(a.present),0) AS present,
-                                COALESCE(COUNT(a.id)-SUM(a.present),0) AS absent
-                            FROM students s
-                            LEFT JOIN attendance a
-                                ON a.student_id=s.id
+                        old_rows = c.execute('''
+                            SELECT a.student_id,a.present
+                            FROM attendance a
+                            JOIN students s ON s.id=a.student_id
                             WHERE s.year=? AND s.section=?
-                            GROUP BY s.id
-                            ORDER BY s.roll_no
                         ''',(year,section)).fetchall()
+
+                    for r in old_rows:
+                        sid = r['student_id']
+                        if sid not in stats:
+                            continue
+                        stats[sid]['GENERAL'][1] += 1
+                        if int(r['present'] or 0) == 1:
+                            stats[sid]['GENERAL'][0] += 1
 
                 wb = Workbook()
                 ws = wb.active
                 ws.title = "Attendance Report"
 
-                headers = [
-                    "Roll Number",
-                    "Student Name",
-                    "Total Classes",
-                    "Present",
-                    "Absent",
-                    "Percentage"
-                ]
-
+                headers = ['Roll No','Student Name'] + final_subject_names + ['TOTAL %']
                 ws.append(headers)
 
                 for cell in ws[1]:
-                    cell.font = Font(bold=True)
-                    cell.alignment = Alignment(horizontal="center")
+                    cell.font = Font(bold=True,color='FFFFFF')
+                    cell.alignment = Alignment(horizontal='center',vertical='center')
 
-                for r in rows:
-                    total = int(r['sessions'] or 0)
-                    present = int(r['present'] or 0)
-                    absent = int(r['absent'] or 0)
-                    percentage = (present / total * 100) if total else 0
+                ws.freeze_panes = 'A2'
+                ws.auto_filter.ref = ws.dimensions
+                ws.row_dimensions[1].height = 28
 
-                    ws.append([
-                        r['roll_no'],
-                        r['name'],
-                        total,
-                        present,
-                        absent,
-                        percentage
-                    ])
+                low_fill = PatternFill(fill_type='solid',fgColor='FFC7CE')
+                low_font = Font(color='9C0006')
 
-                for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):
-                    row[0].number_format = '0.00"%"'
+                for st in students:
+                    row_values = [st['roll_no'],st['name']]
+                    total_present = 0
+                    total_classes = 0
+
+                    for code in subject_codes:
+                        present,total = stats.get(st['id'],{}).get(code,[0,0])
+                        total_present += present
+                        total_classes += total
+                        percentage = round(100.0 * present / total,2) if total else None
+                        row_values.append(percentage)
+
+                    total_percentage = round(100.0 * total_present / total_classes,2) if total_classes else None
+                    row_values.append(total_percentage)
+                    ws.append(row_values)
+                    current_row = ws.max_row
+
+                    for col in range(3,ws.max_column + 1):
+                        cell = ws.cell(row=current_row,column=col)
+                        cell.alignment = Alignment(horizontal='center',vertical='center')
+                        if cell.value is not None:
+                            cell.number_format = '0.00"%"'
+
+                    ws.cell(current_row,1).alignment = Alignment(horizontal='center',vertical='center')
+                    ws.cell(current_row,2).alignment = Alignment(horizontal='left',vertical='center')
+
+                    if total_percentage is not None and total_percentage < 75:
+                        for col in range(1,ws.max_column + 1):
+                            cell = ws.cell(row=current_row,column=col)
+                            cell.fill = low_fill
+                            cell.font = low_font
 
                 ws.column_dimensions['A'].width = 18
-                ws.column_dimensions['B'].width = 30
-                ws.column_dimensions['C'].width = 15
-                ws.column_dimensions['D'].width = 12
-                ws.column_dimensions['E'].width = 12
-                ws.column_dimensions['F'].width = 15
+                ws.column_dimensions['B'].width = 32
+                for col in range(3,ws.max_column + 1):
+                    ws.column_dimensions[get_column_letter(col)].width = 15
 
                 output = BytesIO()
                 wb.save(output)
                 output.seek(0)
-
                 data = output.getvalue()
 
                 self.send_response(200)
-                self.send_header(
-                    'Content-Type',
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
-                self.send_header(
-                    'Content-Disposition',
-                    f'attachment; filename="attendance_report_year_{year}_{section}.xlsx"'
-                )
-                self.send_header('Content-Length', str(len(data)))
+                self.send_header('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                self.send_header('Content-Disposition',f'attachment; filename="attendance_subject_wise_year_{year}_{section}.xlsx"')
+                self.send_header('Content-Length',str(len(data)))
                 self.end_headers()
                 self.wfile.write(data)
                 return
