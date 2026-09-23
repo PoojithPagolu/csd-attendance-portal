@@ -452,7 +452,7 @@ SUBJECTS = {
   3: {
     'ML': ('Machine Learning','M.VINUTHNA'),
     'CN': ('Computer Networks','D.SAI VENKATA GOWTHAM'),
-    'SE': ('Software Engineering','V.NAGA MEENA'),
+    'SE': ('Software Engineering','N.NAGA MANI'),
     'CTM': ('Construction Technology & Management','B.SAI KUMAR REDDY'),
     'OOAD': ('Object Oriented Analysis & Design','M. BHAGYA SRI'),
     'ML LAB': ('Machine Learning Lab','M.VINUTHNA'),
