@@ -828,185 +828,232 @@ class Handler(SimpleHTTPRequestHandler):
                     rows=c.execute('''SELECT s.roll_no,s.name,COUNT(a.id) sessions,COALESCE(SUM(a.present),0) present,COALESCE(COUNT(a.id)-SUM(a.present),0) absent,CASE WHEN COUNT(a.id)=0 THEN 0 ELSE ROUND(100.0*SUM(a.present)/COUNT(a.id),2) END percentage FROM students s LEFT JOIN attendance a ON a.student_id=s.id WHERE s.year=? AND s.section=? GROUP BY s.id ORDER BY s.roll_no''',(year,section)).fetchall()
                 return self.send_json([dict(r) for r in rows])
             if p.path=='/api/export.xlsx':
-                from openpyxl.styles import PatternFill
-                from openpyxl.utils import get_column_letter
-
+                # Monthly attendance workbook matching the department's reference sheet.
                 year = int(q.get('year',['2'])[0])
                 section = q.get('section',['A'])[0].upper()
 
                 if year not in range(1,5):
                     return self.send_json({'error':'Invalid year.'},400)
-
                 if section not in ('A','B','ALL'):
                     return self.send_json({'error':'Invalid section.'},400)
 
-                subject_codes = list(SUBJECTS.get(year, {}).keys())
+                from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+                from openpyxl.utils import get_column_letter
+                from collections import defaultdict
 
-                short_names = {
-                    'PYTHON LAB': 'PY LAB',
-                    'JAVA LAB': 'JAVA LAB',
-                    'IDS LAB': 'IDS LAB',
-                    'FULL STACK LAB': 'FSD LAB',
-                    'TINKERING LAB': 'TINKER',
-                    'SOFT SKILLS': 'SOFT SKILLS',
-                    'CERT COURSE': 'CERT',
-                    'COUNSEL LNG': 'COUNSEL',
-                    'FULL STACK LAB-II': 'FSD LAB-II',
-                    'MINI PROJECT': 'MINI PROJ'
+                # Year 3 follows the supplied MONTHLY ATTENDANCE III-B workbook.
+                export_subjects = {
+                    2: ['DMGT','UHV','IDS','ADS','JAVA','IDS LAB','JAVA LAB','PYTHON LAB','ES','ASSOC','LIB','SPORTS','CERT COURSE'],
+                    3: ['ML','CN','SE','CTM','NPTEL','SOFT SKILLS','ML LAB','CN LAB','FULL STACK LAB','TINKERING LAB','SS-I'],
+                    4: ['BCT','COI','BDA','SWM','SGT','HRM','COUNSEL LNG','NPTEL','FULL STACK LAB-II','LIB','MINI PROJECT']
                 }
-
-                excel_subjects = [short_names.get(code, code) for code in subject_codes]
-                used_names = {}
-                final_subject_names = []
-                for name in excel_subjects:
-                    if name not in used_names:
-                        used_names[name] = 1
-                        final_subject_names.append(name)
-                    else:
-                        used_names[name] += 1
-                        final_subject_names.append(f"{name} {used_names[name]}")
-
-                if section == 'ALL':
-                    students = c.execute('''
-                        SELECT id,roll_no,name,section
-                        FROM students
-                        WHERE year=?
-                        ORDER BY section,roll_no
-                    ''',(year,)).fetchall()
-                else:
-                    students = c.execute('''
-                        SELECT id,roll_no,name,section
-                        FROM students
-                        WHERE year=? AND section=?
-                        ORDER BY roll_no
-                    ''',(year,section)).fetchall()
-
-                stats = {}
-                for st in students:
-                    stats[st['id']] = {code:[0,0] for code in subject_codes}
+                short_subject = {
+                    'PYTHON LAB':'PY LAB',
+                    'COUNSEL LNG':'COUNSEL LNG',
+                    'FULL STACK LAB-II':'FULL STACK LAB-II',
+                    'MINI PROJECT':'MINI PROJECT'
+                }
+                subject_codes = export_subjects.get(year, []) if year >= 2 else []
 
                 if year >= 2:
                     if section == 'ALL':
-                        records = c.execute('''
-                            SELECT ar.student_id,ass.subject_code,ar.status
-                            FROM attendance_records ar
-                            JOIN attendance_sessions ass ON ass.id=ar.session_id
-                            JOIN students s ON s.id=ar.student_id
-                            WHERE s.year=? AND ass.year=? AND ass.section=s.section
-                            ORDER BY ar.student_id,ass.subject_code
-                        ''',(year,year)).fetchall()
-                    else:
-                        records = c.execute('''
-                            SELECT ar.student_id,ass.subject_code,ar.status
-                            FROM attendance_records ar
-                            JOIN attendance_sessions ass ON ass.id=ar.session_id
-                            JOIN students s ON s.id=ar.student_id
-                            WHERE s.year=? AND s.section=? AND ass.year=? AND ass.section=?
-                            ORDER BY ar.student_id,ass.subject_code
-                        ''',(year,section,year,section)).fetchall()
-
-                    for r in records:
-                        sid = r['student_id']
-                        code = r['subject_code']
-                        if sid not in stats:
-                            continue
-                        if code not in stats[sid]:
-                            stats[sid][code] = [0,0]
-                        stats[sid][code][1] += 1
-                        if str(r['status']).lower() == 'present':
-                            stats[sid][code][0] += 1
-                else:
-                    subject_codes = ['GENERAL']
-                    final_subject_names = ['GENERAL']
-                    for st in students:
-                        stats[st['id']] = {'GENERAL':[0,0]}
-
-                    if section == 'ALL':
-                        old_rows = c.execute('''
-                            SELECT a.student_id,a.present
-                            FROM attendance a
-                            JOIN students s ON s.id=a.student_id
+                        rows = c.execute('''
+                            SELECT s.id AS student_id, s.roll_no, s.name, s.section,
+                                   ass.id AS session_id, ass.attendance_date,
+                                   ass.subject_code, ar.status
+                            FROM students s
+                            LEFT JOIN attendance_records ar ON ar.student_id=s.id
+                            LEFT JOIN attendance_sessions ass
+                                ON ass.id=ar.session_id
+                                AND ass.year=s.year
+                                AND ass.section=s.section
                             WHERE s.year=?
+                            ORDER BY s.section, s.roll_no, ass.attendance_date
                         ''',(year,)).fetchall()
                     else:
-                        old_rows = c.execute('''
-                            SELECT a.student_id,a.present
-                            FROM attendance a
-                            JOIN students s ON s.id=a.student_id
+                        rows = c.execute('''
+                            SELECT s.id AS student_id, s.roll_no, s.name, s.section,
+                                   ass.id AS session_id, ass.attendance_date,
+                                   ass.subject_code, ar.status
+                            FROM students s
+                            LEFT JOIN attendance_records ar ON ar.student_id=s.id
+                            LEFT JOIN attendance_sessions ass
+                                ON ass.id=ar.session_id
+                                AND ass.year=?
+                                AND ass.section=?
                             WHERE s.year=? AND s.section=?
+                            ORDER BY s.roll_no, ass.attendance_date
+                        ''',(year,section,year,section)).fetchall()
+                else:
+                    if section == 'ALL':
+                        rows = c.execute('''
+                            SELECT s.id AS student_id, s.roll_no, s.name, s.section,
+                                   a.attendance_date, a.present
+                            FROM students s
+                            LEFT JOIN attendance a ON a.student_id=s.id
+                            WHERE s.year=?
+                            ORDER BY s.section, s.roll_no, a.attendance_date
+                        ''',(year,)).fetchall()
+                    else:
+                        rows = c.execute('''
+                            SELECT s.id AS student_id, s.roll_no, s.name, s.section,
+                                   a.attendance_date, a.present
+                            FROM students s
+                            LEFT JOIN attendance a ON a.student_id=s.id
+                            WHERE s.year=? AND s.section=?
+                            ORDER BY s.roll_no, a.attendance_date
                         ''',(year,section)).fetchall()
 
-                    for r in old_rows:
-                        sid = r['student_id']
-                        if sid not in stats:
-                            continue
-                        stats[sid]['GENERAL'][1] += 1
-                        if int(r['present'] or 0) == 1:
-                            stats[sid]['GENERAL'][0] += 1
+                if section == 'ALL':
+                    students = c.execute(
+                        'SELECT id,roll_no,name,section FROM students WHERE year=? ORDER BY section,roll_no',
+                        (year,)
+                    ).fetchall()
+                else:
+                    students = c.execute(
+                        'SELECT id,roll_no,name,section FROM students WHERE year=? AND section=? ORDER BY roll_no',
+                        (year,section)
+                    ).fetchall()
+
+                monthly = defaultdict(list)
+                for r in rows:
+                    if r['attendance_date']:
+                        monthly[str(r['attendance_date'])[:7]].append(r)
+                if not monthly:
+                    monthly[india_now().strftime('%Y-%m')] = []
 
                 wb = Workbook()
-                ws = wb.active
-                ws.title = "Attendance Report"
+                wb.remove(wb.active)
 
-                headers = ['Roll No','Student Name'] + final_subject_names + ['TOTAL %']
-                ws.append(headers)
+                thin = Side(style='thin', color='000000')
+                medium = Side(style='medium', color='000000')
+                all_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+                roll_border = Border(left=medium, right=medium, top=medium, bottom=medium)
+                total_fill = PatternFill(fill_type='solid', fgColor='D9E1F2')
+                low_fill = PatternFill(fill_type='solid', fgColor='F4CCCC')
 
-                for cell in ws[1]:
-                    cell.font = Font(bold=True,color='FFFFFF')
-                    cell.alignment = Alignment(horizontal='center',vertical='center')
+                month_names = {1:'JAN',2:'FEB',3:'MAR',4:'APR',5:'MAY',6:'JUN',7:'JULY',8:'AUG',9:'SEP',10:'OCT',11:'NOV',12:'DEC'}
 
-                ws.freeze_panes = 'A2'
-                ws.auto_filter.ref = ws.dimensions
-                ws.row_dimensions[1].height = 28
+                def class_title(y, sec):
+                    sem = {1:'I-I',2:'II-I',3:'III-I',4:'IV-I'}.get(y,str(y))
+                    sec_text = 'A & B' if sec == 'ALL' else sec
+                    return f'{sem} CSD-{sec_text} Sem Attendance Report'
 
-                low_fill = PatternFill(fill_type='solid',fgColor='FFC7CE')
-                low_font = Font(color='9C0006')
+                for month_key in sorted(monthly.keys()):
+                    try:
+                        month_num = int(month_key.split('-')[1])
+                    except Exception:
+                        month_num = india_now().month
+                    sheet_name = month_names.get(month_num, month_key[-2:])
+                    if sheet_name in wb.sheetnames:
+                        sheet_name = f'{sheet_name}_{month_key[-2:]}'
+                    ws = wb.create_sheet(sheet_name[:31])
 
-                for st in students:
-                    row_values = [st['roll_no'],st['name']]
-                    total_present = 0
-                    total_classes = 0
+                    last_col = 2 + len(subject_codes) + 2
+                    last_letter = get_column_letter(last_col)
+                    ws.merge_cells(f'A1:{last_letter}1')
+                    ws.merge_cells(f'A2:{last_letter}2')
+                    ws.merge_cells(f'A3:{last_letter}3')
 
-                    for code in subject_codes:
-                        present,total = stats.get(st['id'],{}).get(code,[0,0])
-                        total_present += present
-                        total_classes += total
-                        percentage = round(100.0 * present / total,2) if total else None
-                        row_values.append(percentage)
+                    ws['A1'] = 'SRK INSTITUTE OF TECHNOLOGY, ENIKEPADU, VIJAYAWADA'
+                    ws['A2'] = 'DEPARTMENT OF CSD          A.Y. 2026-2027'
+                    ws['A3'] = class_title(year, section)
+                    title_font = Font(name='Times New Roman', size=11, bold=True)
+                    for cell in (ws['A1'], ws['A2'], ws['A3']):
+                        cell.font = title_font
+                        cell.alignment = Alignment(horizontal='center', vertical='center')
 
-                    total_percentage = round(100.0 * total_present / total_classes,2) if total_classes else None
-                    row_values.append(total_percentage)
-                    ws.append(row_values)
-                    current_row = ws.max_row
+                    headers = ['S.No','Roll No. '] + [short_subject.get(x,x) for x in subject_codes] + ['TOTAL','%']
+                    for col, value in enumerate(headers,1):
+                        cell=ws.cell(4,col,value)
+                        cell.font=Font(name='Times New Roman',size=11,bold=True)
+                        cell.alignment=Alignment(horizontal='center',vertical='center',wrap_text=True)
+                        cell.border=all_border
+                    ws.row_dimensions[4].height=41.4
 
-                    for col in range(3,ws.max_column + 1):
-                        cell = ws.cell(row=current_row,column=col)
-                        cell.alignment = Alignment(horizontal='center',vertical='center')
-                        if cell.value is not None:
-                            cell.number_format = '0.00"%"'
+                    month_rows = monthly.get(month_key, [])
+                    class_counts = {code:0 for code in subject_codes}
+                    seen_sessions=set()
+                    for r in month_rows:
+                        if year >= 2:
+                            sid=r['session_id']
+                            code=str(r['subject_code'] or '')
+                            if sid is not None and code in class_counts and sid not in seen_sessions:
+                                class_counts[code]+=1
+                                seen_sessions.add(sid)
 
-                    ws.cell(current_row,1).alignment = Alignment(horizontal='center',vertical='center')
-                    ws.cell(current_row,2).alignment = Alignment(horizontal='left',vertical='center')
+                    ws.cell(5,1,'')
+                    ws.cell(5,2,'Total classes')
+                    for col,code in enumerate(subject_codes,3):
+                        ws.cell(5,col,class_counts[code])
+                    for col in range(1,last_col+1):
+                        cell=ws.cell(5,col)
+                        cell.font=Font(name='Times New Roman',size=12,bold=True)
+                        cell.alignment=Alignment(horizontal='center',vertical='center')
+                        cell.fill=total_fill
+                        cell.border=all_border
+                    ws.cell(5,last_col-1,f'=SUM(C5:{get_column_letter(last_col-2)}5)')
 
-                    if total_percentage is not None and total_percentage < 75:
-                        for col in range(1,ws.max_column + 1):
-                            cell = ws.cell(row=current_row,column=col)
-                            cell.fill = low_fill
-                            cell.font = low_font
+                    stats={st['id']:{code:[0,0] for code in subject_codes} for st in students}
+                    for r in month_rows:
+                        if year >= 2:
+                            sid=r['student_id']
+                            code=str(r['subject_code'] or '')
+                            if sid in stats and code in stats[sid]:
+                                stats[sid][code][1]+=1
+                                if str(r['status'] or '').lower() in ('present','late'):
+                                    stats[sid][code][0]+=1
 
-                ws.column_dimensions['A'].width = 18
-                ws.column_dimensions['B'].width = 32
-                for col in range(3,ws.max_column + 1):
-                    ws.column_dimensions[get_column_letter(col)].width = 15
+                    row_no=6
+                    for serial,st in enumerate(students,1):
+                        values=[serial,st['roll_no']]
+                        present_total=0
+                        attended_total=0
+                        for code in subject_codes:
+                            present,attended=stats[st['id']][code]
+                            values.append(present if attended else '')
+                            present_total+=present
+                            attended_total+=attended
+                        values.append(present_total)
+                        percentage=(present_total/attended_total*100) if attended_total else None
+                        values.append(percentage)
+                        ws.append(values)
 
-                output = BytesIO()
+                        for col in range(1,last_col+1):
+                            cell=ws.cell(row_no,col)
+                            cell.font=Font(name='Times New Roman',size=12 if col in (1,2,last_col-1) else 11,bold=(col==last_col-1))
+                            cell.alignment=Alignment(horizontal='center',vertical='center')
+                            cell.border=all_border
+                        ws.cell(row_no,last_col-1).fill=total_fill
+                        ws.cell(row_no,2).border=roll_border
+
+                        if percentage is not None and percentage < 75:
+                            for col in range(1,last_col+1):
+                                cell=ws.cell(row_no,col)
+                                cell.fill=low_fill
+                                cell.font=Font(name='Times New Roman',size=12 if col in (1,2,last_col-1) else 11,color='C00000',bold=(col==last_col-1))
+
+                        ws.cell(row_no,last_col).number_format='0.00"%"'
+                        row_no+=1
+
+                    widths={1:13,2:16.5}
+                    for col in range(3,last_col+1): widths[col]=13
+                    for col,width in widths.items(): ws.column_dimensions[get_column_letter(col)].width=width
+                    ws.freeze_panes='C6'
+                    ws.auto_filter.ref=f'A4:{last_letter}{max(5,row_no-1)}'
+                    ws.print_title_rows='1:5'
+                    ws.page_setup.orientation='landscape'
+                    ws.page_setup.fitToWidth=1
+                    ws.page_setup.fitToHeight=0
+                    ws.sheet_properties.pageSetUpPr.fitToPage=True
+
+                output=BytesIO()
                 wb.save(output)
                 output.seek(0)
-                data = output.getvalue()
-
+                data=output.getvalue()
                 self.send_response(200)
                 self.send_header('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                self.send_header('Content-Disposition',f'attachment; filename="attendance_subject_wise_year_{year}_{section}.xlsx"')
+                self.send_header('Content-Disposition',f'attachment; filename="attendance_monthly_year_{year}_{section}.xlsx"')
                 self.send_header('Content-Length',str(len(data)))
                 self.end_headers()
                 self.wfile.write(data)
